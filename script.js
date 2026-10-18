@@ -1,4 +1,12 @@
 
+/* ==========================================
+   PAGEFORGE - COMPLETE SCRIPT.JS V6
+   Supabase Authentication + Page Builder
+========================================== */
+
+// ==========================================
+// 1. SUPABASE CONFIGURATION
+// ==========================================
 
 const SUPABASE_URL =
   'https://uzrdwnfvdanaohrwrybt.supabase.co';
@@ -6,16 +14,23 @@ const SUPABASE_URL =
 const SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_SndQ_tuEBtqvIGMSmdiQ-Q_vg8-zJWP';
 
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
-
-// =========================================
-// 2. HELPERS
-// =========================================
-
 const $ = id => document.getElementById(id);
+
+let db = null;
+
+if (
+  window.supabase &&
+  typeof window.supabase.createClient === 'function'
+) {
+  db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+}
+
+// ==========================================
+// 2. APPLICATION STATE
+// ==========================================
 
 const keys = [
   'title',
@@ -30,27 +45,40 @@ const keys = [
 
 let user = null;
 let editingId = null;
+
 let imageFile = null;
 let imageUrl = '';
 let imagePath = '';
 let localImage = '';
 
-function status(message) {
-  $('status').textContent = message;
+let authRefreshBusy = false;
+
+// ==========================================
+// 3. HELPERS
+// ==========================================
+
+function setStatus(message) {
+  if ($('status')) {
+    $('status').textContent = message;
+  }
 }
 
-function getErrorMessage(error) {
+function setAuthStatus(message) {
+  if ($('authStatus')) {
+    $('authStatus').textContent = message;
+  }
+}
+
+function errorMessage(error) {
   if (!error) return 'Unknown error';
 
   const message = error.message || String(error);
 
-  if (
-    message.toLowerCase().includes('failed to fetch')
-  ) {
+  if (/failed to fetch/i.test(message)) {
     return (
-      'Cannot connect to Supabase. Check the ' +
-      'project URL, internet connection and ' +
-      'whether your Supabase project is active.'
+      'Cannot connect to Supabase. Check your ' +
+      'internet connection, project URL and ' +
+      'Supabase project status.'
     );
   }
 
@@ -58,8 +86,10 @@ function getErrorMessage(error) {
 }
 
 function cleanUrl(value) {
+  if (!value) return '';
+
   try {
-    const url = new URL(value);
+    const url = new URL(value.trim());
 
     if (
       url.protocol === 'https:' ||
@@ -67,28 +97,17 @@ function cleanUrl(value) {
     ) {
       return url.href;
     }
-
-    return '';
-  } catch {
+  } catch (error) {
     return '';
   }
+
+  return '';
 }
 
-function dataFromForm() {
-  return Object.fromEntries(
-    keys.map(key => [
-      key,
-      $(key).value
-    ])
-  );
-}
-
-function element(tag, className, content) {
+function element(tag, className = '', content) {
   const el = document.createElement(tag);
 
-  if (className) {
-    el.className = className;
-  }
+  if (className) el.className = className;
 
   if (content !== undefined) {
     el.textContent = content;
@@ -97,25 +116,83 @@ function element(tag, className, content) {
   return el;
 }
 
+function dataFromForm() {
+  const result = {};
+
+  for (const key of keys) {
+    result[key] = $(key).value;
+  }
+
+  return result;
+}
+
 function clearLocalImage() {
   if (localImage) {
     URL.revokeObjectURL(localImage);
+    localImage = '';
   }
-
-  localImage = '';
 }
 
-// =========================================
-// 3. PAGE RENDERING
-// =========================================
+// ==========================================
+// 4. AUTH REDIRECT URL
+// ==========================================
+
+function getRedirectUrl() {
+  // Return to the same website, without
+  // an old page ID or auth error fragment.
+  const url = new URL(window.location.href);
+
+  url.search = '';
+  url.hash = '';
+
+  return url.href;
+}
+
+function handleAuthRedirectError() {
+  const params = new URLSearchParams(
+    window.location.hash.substring(1)
+  );
+
+  const errorCode = params.get('error_code');
+  const errorDescription =
+    params.get('error_description');
+
+  if (!errorCode && !errorDescription) {
+    return;
+  }
+
+  if (errorCode === 'otp_expired') {
+    setAuthStatus(
+      'Your confirmation link has expired ' +
+      'or was already used. Enter your email ' +
+      'and tap Resend confirmation email.'
+    );
+  } else {
+    setAuthStatus(
+      errorDescription ||
+      'Email confirmation failed.'
+    );
+  }
+
+  // Remove error from URL.
+  history.replaceState(
+    null,
+    '',
+    window.location.pathname +
+    window.location.search
+  );
+}
+
+// ==========================================
+// 5. RENDER WEBSITE
+// ==========================================
 
 function render(target, data, image) {
+  if (!target) return;
+
   target.replaceChildren();
 
-  const shell = element(
-    'article',
-    'rendered'
-  );
+  const shell = element('article', 'rendered');
 
   shell.style.background =
     data.background || '#0b1020';
@@ -123,12 +200,7 @@ function render(target, data, image) {
   shell.style.color =
     data.textColor || '#ffffff';
 
-  const inner = element(
-    'div',
-    'renderedInner'
-  );
-
-  // Cover image
+  const inner = element('div', 'renderedInner');
 
   if (image) {
     const img = element('img');
@@ -140,41 +212,25 @@ function render(target, data, image) {
     inner.append(img);
   }
 
-  // Title
-
-  inner.append(
-    element(
-      'h1',
-      '',
-      data.title || 'Untitled Page'
-    )
+  const title = element(
+    'h1',
+    '',
+    data.title || 'Untitled Page'
   );
 
-  // Subtitle
+  inner.append(title);
 
   if (data.subtitle) {
     inner.append(
-      element(
-        'h3',
-        '',
-        data.subtitle
-      )
+      element('h3', '', data.subtitle)
     );
   }
-
-  // Description
 
   if (data.description) {
     inner.append(
-      element(
-        'p',
-        '',
-        data.description
-      )
+      element('p', '', data.description)
     );
   }
-
-  // Action button
 
   const url = cleanUrl(data.buttonUrl);
 
@@ -198,13 +254,12 @@ function render(target, data, image) {
   }
 
   shell.append(inner);
-
   target.append(shell);
 }
 
-// =========================================
-// 4. LIVE PREVIEW
-// =========================================
+// ==========================================
+// 6. LIVE PREVIEW
+// ==========================================
 
 function preview() {
   render(
@@ -214,33 +269,27 @@ function preview() {
   );
 }
 
-// =========================================
-// 5. PUBLIC PAGE URL
-// =========================================
+// ==========================================
+// 7. PUBLIC PAGE URL
+// ==========================================
 
 function publicUrl(id) {
-  const url = new URL(
-    window.location.href
-  );
+  const url = new URL(window.location.href);
 
   url.search = '';
   url.hash = '';
 
-  url.searchParams.set(
-    'page',
-    id
-  );
+  url.searchParams.set('page', id);
 
   return url.href;
 }
 
-// =========================================
-// 6. RESET EDITOR
-// =========================================
+// ==========================================
+// 8. RESET EDITOR
+// ==========================================
 
 function clearEditor() {
   editingId = null;
-
   imageFile = null;
   imageUrl = '';
   imagePath = '';
@@ -249,8 +298,7 @@ function clearEditor() {
 
   $('image').value = '';
 
-  $('title').value =
-    'Welcome to my page';
+  $('title').value = 'Welcome to my page';
 
   $('subtitle').value =
     'Everything you need, in one place';
@@ -258,38 +306,276 @@ function clearEditor() {
   $('description').value =
     'A beautiful page made with PageForge.';
 
-  $('buttonText').value =
-    'Contact us';
-
+  $('buttonText').value = 'Contact us';
   $('buttonUrl').value = '';
 
-  $('background').value =
-    '#0b1020';
-
-  $('accent').value =
-    '#8b5cf6';
-
-  $('textColor').value =
-    '#ffffff';
+  $('background').value = '#0b1020';
+  $('accent').value = '#8b5cf6';
+  $('textColor').value = '#ffffff';
 
   $('result').hidden = true;
 
-  status('');
+  setStatus('');
+  preview();
+}
+
+// ==========================================
+// 9. IMAGE SELECTION
+// ==========================================
+
+function handleImage(event) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    alert('Only JPG, PNG and WEBP are supported.');
+    event.target.value = '';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Image must be smaller than 5 MB.');
+    event.target.value = '';
+    return;
+  }
+
+  imageFile = file;
+
+  clearLocalImage();
+
+  localImage = URL.createObjectURL(file);
 
   preview();
 }
 
-// =========================================
-// 7. LOAD SAVED PAGES
-// =========================================
+// ==========================================
+// 10. AUTHENTICATION
+// ==========================================
+
+async function authenticate(mode) {
+  if (!db) {
+    setAuthStatus('Supabase library is not loaded.');
+    return;
+  }
+
+  const email = $('email').value.trim();
+  const password = $('password').value;
+
+  if (!email || !password) {
+    setAuthStatus(
+      'Please enter your email and password.'
+    );
+    return;
+  }
+
+  if (password.length < 6) {
+    setAuthStatus(
+      'Password must contain at least 6 characters.'
+    );
+    return;
+  }
+
+  $('signin').disabled = true;
+  $('signup').disabled = true;
+
+  setAuthStatus(
+    mode === 'signup'
+      ? 'Creating account...'
+      : 'Signing in...'
+  );
+
+  try {
+    let result;
+
+    if (mode === 'signup') {
+      result = await db.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: getRedirectUrl()
+        }
+      });
+    } else {
+      result = await db.auth.signInWithPassword({
+        email,
+        password
+      });
+    }
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    if (mode === 'signup') {
+      if (!result.data.session) {
+        setAuthStatus(
+          'Check your inbox for the confirmation ' +
+          'email. Open the newest link to activate ' +
+          'your account.'
+        );
+
+        $('resendConfirmation').hidden = false;
+      } else {
+        setAuthStatus('Account created successfully!');
+      }
+    } else {
+      setAuthStatus('Signed in successfully!');
+    }
+
+    if (result.data.session) {
+      await refreshAuth();
+    }
+
+  } catch (error) {
+    setAuthStatus(
+      'Authentication failed: ' +
+      errorMessage(error)
+    );
+
+    console.error('Auth error:', error);
+  } finally {
+    $('signin').disabled = false;
+    $('signup').disabled = false;
+  }
+}
+
+// ==========================================
+// 11. RESEND CONFIRMATION EMAIL
+// ==========================================
+
+async function resendConfirmation() {
+  if (!db) return;
+
+  const email = $('email').value.trim();
+
+  if (!email) {
+    setAuthStatus(
+      'Enter your email address first.'
+    );
+    return;
+  }
+
+  const button = $('resendConfirmation');
+
+  button.disabled = true;
+
+  setAuthStatus(
+    'Requesting a new confirmation email...'
+  );
+
+  try {
+    const { error } = await db.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: getRedirectUrl()
+      }
+    });
+
+    if (error) throw error;
+
+    setAuthStatus(
+      'If your account needs confirmation, ' +
+      'a new email will be sent. Check your inbox ' +
+      'and use the newest confirmation link.'
+    );
+
+  } catch (error) {
+    setAuthStatus(
+      'Unable to resend email: ' +
+      errorMessage(error)
+    );
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// ==========================================
+// 12. AUTH SESSION
+// ==========================================
+
+async function refreshAuth() {
+  if (!db || authRefreshBusy) return;
+
+  authRefreshBusy = true;
+
+  try {
+    const {
+      data: { user: currentUser },
+      error
+    } = await db.auth.getUser();
+
+    if (error) throw error;
+
+    user = currentUser;
+
+    $('auth').hidden = !!user;
+    $('editor').hidden = !user;
+    $('logout').hidden = !user;
+
+    if (user) {
+      $('resendConfirmation').hidden = true;
+      await loadPages();
+    } else {
+      $('myPages').replaceChildren();
+    }
+
+  } catch (error) {
+    console.error('Session error:', error);
+
+    user = null;
+
+    $('auth').hidden = false;
+    $('editor').hidden = true;
+    $('logout').hidden = true;
+
+    setAuthStatus(
+      'Session error: ' + errorMessage(error)
+    );
+  } finally {
+    authRefreshBusy = false;
+  }
+}
+
+// ==========================================
+// 13. LOGOUT
+// ==========================================
+
+async function logout() {
+  if (!db) return;
+
+  const { error } = await db.auth.signOut();
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  user = null;
+
+  clearEditor();
+  await refreshAuth();
+
+  setAuthStatus('You have signed out.');
+}
+
+// ==========================================
+// 14. LOAD SAVED PAGES
+// ==========================================
 
 async function loadPages() {
   if (!user) return;
 
   const wrap = $('myPages');
 
-  wrap.textContent =
-    'Loading your pages...';
+  wrap.textContent = 'Loading your pages...';
 
   try {
     const { data, error } = await db
@@ -311,15 +597,12 @@ async function loadPages() {
     }
 
     for (const page of data) {
-      const row = element(
-        'div',
-        'pageRow'
-      );
+      const row = element('div', 'pageRow');
 
       const link = element(
         'a',
         '',
-        page.title
+        page.title || 'Untitled page'
       );
 
       link.href = publicUrl(page.id);
@@ -338,9 +621,7 @@ async function loadPages() {
       );
 
       editButton.type = 'button';
-
-      editButton.onclick = () =>
-        editPage(page.id);
+      editButton.onclick = () => editPage(page.id);
 
       const deleteButton = element(
         'button',
@@ -349,37 +630,29 @@ async function loadPages() {
       );
 
       deleteButton.type = 'button';
-
       deleteButton.onclick = () =>
         deletePage(page.id);
 
-      actions.append(
-        editButton,
-        deleteButton
-      );
-
-      row.append(
-        link,
-        actions
-      );
-
+      actions.append(editButton, deleteButton);
+      row.append(link, actions);
       wrap.append(row);
     }
 
   } catch (error) {
     wrap.textContent =
-      'Error: ' + getErrorMessage(error);
+      'Unable to load pages: ' +
+      errorMessage(error);
   }
 }
 
-// =========================================
-// 8. EDIT PAGE
-// =========================================
+// ==========================================
+// 15. EDIT PAGE
+// ==========================================
 
 async function editPage(id) {
   if (!user) return;
 
-  status('Loading page...');
+  setStatus('Loading page...');
 
   try {
     const { data, error } = await db
@@ -393,12 +666,8 @@ async function editPage(id) {
 
     editingId = id;
 
-    imageUrl =
-      data.image_url || '';
-
-    imagePath =
-      data.image_path || '';
-
+    imageUrl = data.image_url || '';
+    imagePath = data.image_path || '';
     imageFile = null;
 
     clearLocalImage();
@@ -412,10 +681,8 @@ async function editPage(id) {
     };
 
     for (const key of keys) {
-      $(key).value =
-        data[key] ||
-        defaults[key] ||
-        '';
+      $('' + key).value =
+        data[key] || defaults[key] || '';
     }
 
     $('result').hidden = true;
@@ -427,29 +694,27 @@ async function editPage(id) {
       behavior: 'smooth'
     });
 
-    status('Editing existing page.');
+    setStatus('Editing page.');
 
   } catch (error) {
-    status(
-      'Error: ' + getErrorMessage(error)
+    setStatus(
+      'Unable to edit: ' + errorMessage(error)
     );
   }
 }
 
-// =========================================
-// 9. DELETE PAGE
-// =========================================
+// ==========================================
+// 16. DELETE PAGE
+// ==========================================
 
 async function deletePage(id) {
   if (!user) return;
 
-  const confirmed = confirm(
-    'Delete this page permanently?'
-  );
+  if (!confirm('Delete this page permanently?')) {
+    return;
+  }
 
-  if (!confirmed) return;
-
-  status('Deleting page...');
+  setStatus('Deleting page...');
 
   try {
     const { data: page, error: readError } =
@@ -470,21 +735,14 @@ async function deletePage(id) {
 
     if (error) throw error;
 
-    // Delete associated image
-
-    if (page?.image_path) {
+    if (page.image_path) {
       const { error: storageError } =
         await db.storage
           .from('page-images')
-          .remove([
-            page.image_path
-          ]);
+          .remove([page.image_path]);
 
       if (storageError) {
-        console.warn(
-          'Image cleanup failed:',
-          storageError.message
-        );
+        console.warn(storageError.message);
       }
     }
 
@@ -494,80 +752,67 @@ async function deletePage(id) {
 
     await loadPages();
 
-    status(
-      'Page deleted successfully.'
-    );
+    setStatus('Page deleted successfully.');
 
   } catch (error) {
-    status(
-      'Delete failed: ' +
-      getErrorMessage(error)
+    setStatus(
+      'Delete failed: ' + errorMessage(error)
     );
   }
 }
 
-// =========================================
-// 10. PUBLISH OR UPDATE PAGE
-// =========================================
+// ==========================================
+// 17. PUBLISH / UPDATE PAGE
+// ==========================================
 
 async function publish() {
   if (!user) {
-    status('Please sign in first.');
+    setStatus('Please sign in first.');
     return;
   }
 
-  const title =
-    $('title').value.trim();
+  const title = $('title').value.trim();
 
   if (!title) {
-    status('Please enter a page title.');
+    setStatus('Please enter a page title.');
     return;
   }
 
-  const publishButton = $('publish');
-
-  publishButton.disabled = true;
-
-  status('Publishing your page...');
+  const button = $('publish');
+  button.disabled = true;
 
   let uploadedPath = '';
-  let saved = false;
+  let databaseSaved = false;
+
+  setStatus('Publishing page...');
 
   try {
-    let newImageUrl = imageUrl;
-    let newImagePath = imagePath;
-
-    // Upload new image if selected
+    let nextImageUrl = imageUrl;
+    let nextImagePath = imagePath;
 
     if (imageFile) {
-      const types = {
+      const extensions = {
         'image/jpeg': 'jpg',
         'image/png': 'png',
         'image/webp': 'webp'
       };
 
-      const extension =
-        types[imageFile.type];
+      const extension = extensions[imageFile.type];
 
       if (!extension) {
-        throw new Error(
-          'Unsupported image type.'
-        );
+        throw new Error('Unsupported image format.');
       }
 
-      if (
-        imageFile.size >
-        5 * 1024 * 1024
-      ) {
-        throw new Error(
-          'Image must be under 5 MB.'
-        );
+      if (imageFile.size > 5 * 1024 * 1024) {
+        throw new Error('Image exceeds 5 MB.');
       }
-
-      status('Uploading image...');
 
       uploadedPath =
-        `${user.id}/${crypto.randomUUID()}.${extension}`;
+        user.id + '/' +
+        crypto.randomUUID() +
+        '.' + extension;
+
+      setStatus('Uploading image...');
 
       const { error: uploadError } =
         await db.storage
@@ -581,40 +826,29 @@ async function publish() {
             }
           );
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
-      const { data: imageData } =
+      const { data: publicData } =
         db.storage
           .from('page-images')
-          .getPublicUrl(
-            uploadedPath
-          );
+          .getPublicUrl(uploadedPath);
 
-      newImageUrl =
-        imageData.publicUrl;
-
-      newImagePath =
-        uploadedPath;
+      nextImageUrl = publicData.publicUrl;
+      nextImagePath = uploadedPath;
     }
 
-    status('Saving website...');
-
-    // Build database record
+    setStatus('Saving page...');
 
     const payload = {
       ...dataFromForm(),
-      image_url: newImageUrl,
-      image_path: newImagePath,
-      user_id: user.id
+      user_id: user.id,
+      image_url: nextImageUrl,
+      image_path: nextImagePath
     };
 
     let result;
 
     if (editingId) {
-      // Update existing page
-
       result = await db
         .from('pages')
         .update(payload)
@@ -622,10 +856,7 @@ async function publish() {
         .eq('user_id', user.id)
         .select('id')
         .single();
-
     } else {
-      // Create new page
-
       result = await db
         .from('pages')
         .insert(payload)
@@ -633,69 +864,50 @@ async function publish() {
         .single();
     }
 
-    if (result.error) {
-      throw result.error;
-    }
+    if (result.error) throw result.error;
 
-    saved = true;
+    databaseSaved = true;
 
-    const pageId =
-      result.data.id;
-
-    const previousImagePath =
-      imagePath;
+    const pageId = result.data.id;
+    const oldImagePath = imagePath;
 
     editingId = pageId;
 
-    imageUrl = newImageUrl;
-    imagePath = newImagePath;
-
+    imageUrl = nextImageUrl;
+    imagePath = nextImagePath;
     imageFile = null;
 
     clearLocalImage();
-
     $('image').value = '';
-
-    // Clean up old replaced image
 
     if (
       uploadedPath &&
-      previousImagePath &&
-      previousImagePath !== newImagePath
+      oldImagePath &&
+      oldImagePath !== nextImagePath
     ) {
       const { error: cleanupError } =
         await db.storage
           .from('page-images')
-          .remove([
-            previousImagePath
-          ]);
+          .remove([oldImagePath]);
 
       if (cleanupError) {
-        console.warn(
-          cleanupError.message
-        );
+        console.warn(cleanupError.message);
       }
     }
 
-    // Generate public link
-
-    const url =
-      publicUrl(pageId);
+    const url = publicUrl(pageId);
 
     $('shareUrl').value = url;
-
     $('openPage').href = url;
-
     $('result').hidden = false;
 
-    // Generate QR code
-
+    // QR code generation
     if (
       window.QRCode &&
-      typeof QRCode.toCanvas === 'function'
+      typeof window.QRCode.toCanvas === 'function'
     ) {
       try {
-        await QRCode.toCanvas(
+        await window.QRCode.toCanvas(
           $('qr'),
           url,
           {
@@ -705,184 +917,57 @@ async function publish() {
         );
 
         $('downloadQR').href =
-          $('qr').toDataURL(
-            'image/png'
-          );
+          $('qr').toDataURL('image/png');
 
         $('downloadQR').download =
           'pageforge-qr.png';
 
       } catch (qrError) {
         console.warn(
-          'QR generation failed:',
+          'QR generation error:',
           qrError
         );
       }
     }
 
-    status(
-      'Page published successfully!'
-    );
+    setStatus('Page published successfully!');
 
     await loadPages();
 
   } catch (error) {
-    // Remove image only if database
-    // saving was unsuccessful
+    if (uploadedPath && !databaseSaved) {
+      const { error: cleanupError } =
+        await db.storage
+          .from('page-images')
+          .remove([uploadedPath]);
 
-    if (
-      uploadedPath &&
-      !saved
-    ) {
-      await db.storage
-        .from('page-images')
-        .remove([
-          uploadedPath
-        ]);
+      if (cleanupError) {
+        console.warn(cleanupError.message);
+      }
     }
 
-    status(
-      'Publishing failed: ' +
-      getErrorMessage(error)
+    setStatus(
+      'Publishing failed: ' + errorMessage(error)
     );
 
-    console.error(error);
+    console.error('Publish error:', error);
 
   } finally {
-    publishButton.disabled = false;
+    button.disabled = false;
   }
 }
 
-// =========================================
-// 11. AUTHENTICATION SESSION
-// =========================================
-
-async function refreshAuth() {
-  try {
-    const {
-      data: { user: current },
-      error
-    } = await db.auth.getUser();
-
-    if (error) throw error;
-
-    user = current;
-
-    $('auth').hidden = !!user;
-    $('editor').hidden = !user;
-    $('logout').hidden = !user;
-
-    if (user) {
-      await loadPages();
-    }
-
-  } catch (error) {
-    console.error(
-      'Authentication error:',
-      error
-    );
-
-    status(
-      'Authentication error: ' +
-      getErrorMessage(error)
-    );
-  }
-}
-
-// =========================================
-// 12. SIGNUP / LOGIN
-// =========================================
-
-async function authenticate(mode) {
-  const email =
-    $('email').value.trim();
-
-  const password =
-    $('password').value;
-
-  if (!email || !password) {
-    alert(
-      'Please enter email and password.'
-    );
-    return;
-  }
-
-  if (password.length < 6) {
-    alert(
-      'Password must contain at least 6 characters.'
-    );
-    return;
-  }
-
-  const signInButton =
-    $('signin');
-
-  const signUpButton =
-    $('signup');
-
-  signInButton.disabled = true;
-  signUpButton.disabled = true;
-
-  try {
-    let result;
-
-    if (mode === 'signup') {
-      result = await db.auth.signUp({
-        email,
-        password
-      });
-
-    } else {
-      result =
-        await db.auth.signInWithPassword({
-          email,
-          password
-        });
-    }
-
-    if (result.error) {
-      throw result.error;
-    }
-
-    if (
-      mode === 'signup' &&
-      !result.data.session
-    ) {
-      alert(
-        'Account created. Check your email to confirm your account.'
-      );
-    }
-
-    await refreshAuth();
-
-  } catch (error) {
-    alert(
-      'Authentication failed: ' +
-      getErrorMessage(error)
-    );
-
-    console.error(error);
-
-  } finally {
-    signInButton.disabled = false;
-    signUpButton.disabled = false;
-  }
-}
-
-// =========================================
-// 13. DISPLAY PUBLIC PAGE
-// =========================================
+// ==========================================
+// 18. PUBLIC PAGE
+// ==========================================
 
 async function showPublic(id) {
   $('builder').hidden = true;
-
   $('publicPage').hidden = false;
 
-  const target =
-    $('publishedContent');
+  const target = $('publishedContent');
 
-  target.textContent =
-    'Loading webpage...';
+  target.textContent = 'Loading webpage...';
 
   try {
     const { data, error } = await db
@@ -893,180 +978,115 @@ async function showPublic(id) {
 
     if (error) throw error;
 
-    if (!data) {
-      throw new Error(
-        'Page not found.'
-      );
-    }
-
     document.title =
-      data.title + ' | PageForge';
+      (data.title || 'Page') + ' | PageForge';
 
     render(
       target,
       data,
-      data.image_url
+      data.image_url || ''
     );
 
   } catch (error) {
     target.textContent =
-      'Unable to load page: ' +
-      getErrorMessage(error);
+      'Unable to load webpage: ' +
+      errorMessage(error);
   }
 }
 
-// =========================================
-// 14. IMAGE UPLOAD PREVIEW
-// =========================================
+// ==========================================
+// 19. INITIALIZE APPLICATION
+// ==========================================
 
-function handleImage(event) {
-  const file =
-    event.target.files[0];
+async function init() {
+  if (!db) {
+    const errorBox = $('libraryError');
 
-  if (!file) return;
+    errorBox.hidden = false;
+    errorBox.textContent =
+      'Supabase could not load. Check your ' +
+      'internet connection and script URL.';
 
-  const allowed = [
-    'image/jpeg',
-    'image/png',
-    'image/webp'
-  ];
-
-  if (
-    !allowed.includes(file.type) ||
-    file.size > 5 * 1024 * 1024
-  ) {
-    alert(
-      'Choose JPG, PNG or WEBP under 5 MB.'
-    );
-
-    event.target.value = '';
     return;
   }
 
-  imageFile = file;
-
-  clearLocalImage();
-
-  localImage =
-    URL.createObjectURL(file);
-
-  preview();
-}
-
-// =========================================
-// 15. INITIALIZE PAGEFORGE
-// =========================================
-
-async function init() {
-  // Detect public page URL
-
-  const pageId =
-    new URLSearchParams(
-      window.location.search
-    ).get('page');
+  // Public pages don't require login.
+  const pageId = new URLSearchParams(
+    window.location.search
+  ).get('page');
 
   if (pageId) {
     await showPublic(pageId);
     return;
   }
 
-  // Sign in button
-
+  // Authentication buttons
   $('signin').onclick = () =>
     authenticate('signin');
-
-  // Sign up button
 
   $('signup').onclick = () =>
     authenticate('signup');
 
-  // Logout button
+  $('resendConfirmation').onclick =
+    resendConfirmation;
 
-  $('logout').onclick = async () => {
-    const { error } =
-      await db.auth.signOut();
+  // Keep resend available for users
+  // who need another confirmation link.
+  $('resendConfirmation').hidden = false;
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+  $('logout').onclick = logout;
 
-    user = null;
-
-    clearEditor();
-
-    await refreshAuth();
-  };
-
-  // Publish button
-
+  // Editor buttons
   $('publish').onclick = publish;
-
-  // New page button
-
   $('reset').onclick = clearEditor;
 
-  // Copy URL
-
+  // Copy public URL
   $('copy').onclick = async () => {
-    const url =
-      $('shareUrl').value;
+    const url = $('shareUrl').value;
 
     try {
-      await navigator.clipboard.writeText(
-        url
-      );
+      await navigator.clipboard.writeText(url);
 
-      status(
-        'URL copied successfully!'
-      );
-
-    } catch {
+      setStatus('URL copied!');
+    } catch (error) {
       $('shareUrl').select();
 
-      status(
-        'Select and copy the URL.'
+      setStatus(
+        'Select the URL and copy it manually.'
       );
     }
   };
 
-  // Live preview inputs
-
+  // Live preview
   for (const key of keys) {
-    $(key).addEventListener(
-      'input',
-      preview
-    );
+    $(key).addEventListener('input', preview);
   }
-
-  // Image input
 
   $('image').addEventListener(
     'change',
     handleImage
   );
 
-  // Render initial preview
-
+  // Render default preview
   preview();
 
-  // Load authentication session
+  // Show expired-link messages
+  handleAuthRedirectError();
 
+  // Restore login session
   await refreshAuth();
 
-  // Listen for login/logout
-
+  // React to authentication changes
   db.auth.onAuthStateChange(() => {
-    setTimeout(
-      refreshAuth,
-      0
-    );
+    setTimeout(() => {
+      refreshAuth();
+    }, 0);
   });
 }
 
-// =========================================
-// 16. START APPLICATION
-// =========================================
+// ==========================================
+// 20. START PAGEFORGE
+// ==========================================
 
 window.addEventListener(
   'DOMContentLoaded',
