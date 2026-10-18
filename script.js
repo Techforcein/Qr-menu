@@ -1,29 +1,19 @@
 
-/* ========================================
-   PAGEFORGE - WEBSITE GENERATOR
-   HTML + CSS + JAVASCRIPT + SUPABASE
-======================================== */
-
-// SUPABASE CONFIGURATION
 
 const SUPABASE_URL =
-  'https://uzrdwnfvdanaohrrwybt.supabase.co';
+  'https://uzrdwnfvdanaohrwrybt.supabase.co';
 
 const SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_SndQ_tuEBtqvIGMSmdiQ-Q_vg8-zJWP';
 
-const configured =
-  !SUPABASE_URL.includes('YOUR-PROJECT') &&
-  !SUPABASE_PUBLISHABLE_KEY.includes('YOUR-SUPABASE');
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
 
-const db = configured
-  ? window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
-    )
-  : null;
-
-// HELPERS
+// =========================================
+// 2. HELPERS
+// =========================================
 
 const $ = id => document.getElementById(id);
 
@@ -45,34 +35,60 @@ let imageUrl = '';
 let imagePath = '';
 let localImage = '';
 
-// URL VALIDATION
+function status(message) {
+  $('status').textContent = message;
+}
 
-const cleanUrl = value => {
+function getErrorMessage(error) {
+  if (!error) return 'Unknown error';
+
+  const message = error.message || String(error);
+
+  if (
+    message.toLowerCase().includes('failed to fetch')
+  ) {
+    return (
+      'Cannot connect to Supabase. Check the ' +
+      'project URL, internet connection and ' +
+      'whether your Supabase project is active.'
+    );
+  }
+
+  return message;
+}
+
+function cleanUrl(value) {
   try {
-    const u = new URL(value);
+    const url = new URL(value);
 
-    return ['https:', 'http:'].includes(u.protocol)
-      ? u.href
-      : '';
+    if (
+      url.protocol === 'https:' ||
+      url.protocol === 'http:'
+    ) {
+      return url.href;
+    }
+
+    return '';
   } catch {
     return '';
   }
-};
-
-// READ FORM DATA
+}
 
 function dataFromForm() {
   return Object.fromEntries(
-    keys.map(k => [k, $(k).value])
+    keys.map(key => [
+      key,
+      $(key).value
+    ])
   );
 }
 
-// CREATE ELEMENT
-
-function element(tag, cls, content) {
+function element(tag, className, content) {
   const el = document.createElement(tag);
 
-  if (cls) el.className = cls;
+  if (className) {
+    el.className = className;
+  }
 
   if (content !== undefined) {
     el.textContent = content;
@@ -81,76 +97,114 @@ function element(tag, cls, content) {
   return el;
 }
 
-// RENDER GENERATED WEBPAGE
+function clearLocalImage() {
+  if (localImage) {
+    URL.revokeObjectURL(localImage);
+  }
+
+  localImage = '';
+}
+
+// =========================================
+// 3. PAGE RENDERING
+// =========================================
 
 function render(target, data, image) {
   target.replaceChildren();
 
-  const shell = element('article', 'rendered');
+  const shell = element(
+    'article',
+    'rendered'
+  );
 
   shell.style.background =
     data.background || '#0b1020';
 
   shell.style.color =
-    data.textColor || '#fff';
+    data.textColor || '#ffffff';
 
-  const inner = element('div', 'renderedInner');
+  const inner = element(
+    'div',
+    'renderedInner'
+  );
+
+  // Cover image
 
   if (image) {
     const img = element('img');
 
     img.src = image;
-    img.alt = data.title || 'Page cover';
+    img.alt = data.title || 'Cover image';
+    img.loading = 'lazy';
 
     inner.append(img);
   }
+
+  // Title
 
   inner.append(
     element(
       'h1',
       '',
-      data.title || 'Untitled page'
+      data.title || 'Untitled Page'
     )
   );
 
+  // Subtitle
+
   if (data.subtitle) {
     inner.append(
-      element('h3', '', data.subtitle)
+      element(
+        'h3',
+        '',
+        data.subtitle
+      )
     );
   }
 
+  // Description
+
   if (data.description) {
     inner.append(
-      element('p', '', data.description)
+      element(
+        'p',
+        '',
+        data.description
+      )
     );
   }
+
+  // Action button
 
   const url = cleanUrl(data.buttonUrl);
 
   if (url) {
-    const a = element(
+    const button = element(
       'a',
       '',
-      data.buttonText || 'Learn more'
+      data.buttonText || 'Learn More'
     );
 
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
+    button.href = url;
+    button.target = '_blank';
+    button.rel = 'noopener noreferrer';
 
-    a.style.background =
+    button.style.background =
       data.accent || '#8b5cf6';
 
-    a.style.color = '#fff';
+    button.style.color = '#ffffff';
 
-    inner.append(a);
+    inner.append(button);
   }
 
   shell.append(inner);
+
   target.append(shell);
 }
 
-// LIVE PREVIEW
+// =========================================
+// 4. LIVE PREVIEW
+// =========================================
 
 function preview() {
   render(
@@ -160,38 +214,38 @@ function preview() {
   );
 }
 
-// STATUS MESSAGE
-
-function status(msg) {
-  $('status').textContent = msg;
-}
-
-// GENERATE PUBLIC URL
+// =========================================
+// 5. PUBLIC PAGE URL
+// =========================================
 
 function publicUrl(id) {
-  const u = new URL(location.href);
+  const url = new URL(
+    window.location.href
+  );
 
-  u.search = '';
-  u.hash = '';
+  url.search = '';
+  url.hash = '';
 
-  u.searchParams.set('page', id);
+  url.searchParams.set(
+    'page',
+    id
+  );
 
-  return u.href;
+  return url.href;
 }
 
-// RESET PAGE EDITOR
+// =========================================
+// 6. RESET EDITOR
+// =========================================
 
 function clearEditor() {
   editingId = null;
+
   imageFile = null;
   imageUrl = '';
   imagePath = '';
 
-  if (localImage) {
-    URL.revokeObjectURL(localImage);
-  }
-
-  localImage = '';
+  clearLocalImage();
 
   $('image').value = '';
 
@@ -204,265 +258,363 @@ function clearEditor() {
   $('description').value =
     'A beautiful page made with PageForge.';
 
-  $('buttonText').value = 'Contact us';
+  $('buttonText').value =
+    'Contact us';
+
   $('buttonUrl').value = '';
 
-  $('background').value = '#0b1020';
-  $('accent').value = '#8b5cf6';
-  $('textColor').value = '#ffffff';
+  $('background').value =
+    '#0b1020';
+
+  $('accent').value =
+    '#8b5cf6';
+
+  $('textColor').value =
+    '#ffffff';
 
   $('result').hidden = true;
 
   status('');
+
   preview();
 }
 
-// LOAD SAVED WEBSITES
+// =========================================
+// 7. LOAD SAVED PAGES
+// =========================================
 
 async function loadPages() {
   if (!user) return;
 
-  const { data, error } = await db
-    .from('pages')
-    .select('id,title,created_at')
-    .eq('user_id', user.id)
-    .order('created_at', {
-      ascending: false
-    });
-
   const wrap = $('myPages');
 
-  wrap.replaceChildren();
+  wrap.textContent =
+    'Loading your pages...';
 
-  if (error) {
-    wrap.textContent = error.message;
-    return;
-  }
+  try {
+    const { data, error } = await db
+      .from('pages')
+      .select('id,title,created_at')
+      .eq('user_id', user.id)
+      .order('created_at', {
+        ascending: false
+      });
 
-  if (!data.length) {
-    wrap.textContent = 'No pages yet.';
-    return;
-  }
+    if (error) throw error;
 
-  for (const p of data) {
-    const row = element('div', 'pageRow');
+    wrap.replaceChildren();
 
-    const a = element('a', '', p.title);
+    if (!data || data.length === 0) {
+      wrap.textContent =
+        'No pages yet. Create your first page!';
+      return;
+    }
 
-    a.href = publicUrl(p.id);
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
+    for (const page of data) {
+      const row = element(
+        'div',
+        'pageRow'
+      );
 
-    const actions = element(
-      'div',
-      'pageButtons'
-    );
+      const link = element(
+        'a',
+        '',
+        page.title
+      );
 
-    const edit = element(
-      'button',
-      'ghost',
-      'Edit'
-    );
+      link.href = publicUrl(page.id);
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
 
-    edit.onclick = () => editPage(p.id);
+      const actions = element(
+        'div',
+        'pageButtons'
+      );
 
-    const del = element(
-      'button',
-      'ghost',
-      'Delete'
-    );
+      const editButton = element(
+        'button',
+        'ghost',
+        'Edit'
+      );
 
-    del.onclick = () => deletePage(p.id);
+      editButton.type = 'button';
 
-    actions.append(edit, del);
+      editButton.onclick = () =>
+        editPage(page.id);
 
-    row.append(a, actions);
+      const deleteButton = element(
+        'button',
+        'ghost',
+        'Delete'
+      );
 
-    wrap.append(row);
+      deleteButton.type = 'button';
+
+      deleteButton.onclick = () =>
+        deletePage(page.id);
+
+      actions.append(
+        editButton,
+        deleteButton
+      );
+
+      row.append(
+        link,
+        actions
+      );
+
+      wrap.append(row);
+    }
+
+  } catch (error) {
+    wrap.textContent =
+      'Error: ' + getErrorMessage(error);
   }
 }
 
-// EDIT EXISTING WEBSITE
+// =========================================
+// 8. EDIT PAGE
+// =========================================
 
 async function editPage(id) {
   if (!user) return;
 
-  const { data, error } = await db
-    .from('pages')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
+  status('Loading page...');
 
-  if (error) {
-    status(error.message);
-    return;
+  try {
+    const { data, error } = await db
+      .from('pages')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) throw error;
+
+    editingId = id;
+
+    imageUrl =
+      data.image_url || '';
+
+    imagePath =
+      data.image_path || '';
+
+    imageFile = null;
+
+    clearLocalImage();
+
+    $('image').value = '';
+
+    const defaults = {
+      background: '#0b1020',
+      accent: '#8b5cf6',
+      textColor: '#ffffff'
+    };
+
+    for (const key of keys) {
+      $(key).value =
+        data[key] ||
+        defaults[key] ||
+        '';
+    }
+
+    $('result').hidden = true;
+
+    preview();
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+
+    status('Editing existing page.');
+
+  } catch (error) {
+    status(
+      'Error: ' + getErrorMessage(error)
+    );
   }
-
-  editingId = id;
-
-  imageUrl = data.image_url || '';
-  imagePath = data.image_path || '';
-
-  if (localImage) {
-    URL.revokeObjectURL(localImage);
-  }
-
-  localImage = '';
-  imageFile = null;
-
-  $('image').value = '';
-
-  for (const k of keys) {
-    $(k).value =
-      data[k] ||
-      ({
-        background: '#0b1020',
-        accent: '#8b5cf6',
-        textColor: '#ffffff'
-      }[k] || '');
-  }
-
-  $('result').hidden = true;
-
-  preview();
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-
-  status('Editing existing page');
 }
 
-// DELETE WEBSITE
+// =========================================
+// 9. DELETE PAGE
+// =========================================
 
 async function deletePage(id) {
   if (!user) return;
 
-  if (!confirm('Delete this page permanently?')) {
-    return;
-  }
+  const confirmed = confirm(
+    'Delete this page permanently?'
+  );
 
-  const { data: page } = await db
-    .from('pages')
-    .select('image_path')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
+  if (!confirmed) return;
 
-  const { error } = await db
-    .from('pages')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', user.id);
+  status('Deleting page...');
 
-  if (error) {
-    status(error.message);
-    return;
-  }
+  try {
+    const { data: page, error: readError } =
+      await db
+        .from('pages')
+        .select('image_path')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
 
-  if (page?.image_path) {
-    const { error: storageError } =
-      await db.storage
-        .from('page-images')
-        .remove([page.image_path]);
+    if (readError) throw readError;
 
-    if (storageError) {
-      console.warn(storageError.message);
+    const { error } = await db
+      .from('pages')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    // Delete associated image
+
+    if (page?.image_path) {
+      const { error: storageError } =
+        await db.storage
+          .from('page-images')
+          .remove([
+            page.image_path
+          ]);
+
+      if (storageError) {
+        console.warn(
+          'Image cleanup failed:',
+          storageError.message
+        );
+      }
     }
+
+    if (editingId === id) {
+      clearEditor();
+    }
+
+    await loadPages();
+
+    status(
+      'Page deleted successfully.'
+    );
+
+  } catch (error) {
+    status(
+      'Delete failed: ' +
+      getErrorMessage(error)
+    );
   }
-
-  if (editingId === id) {
-    clearEditor();
-  }
-
-  await loadPages();
-
-  status('Website deleted successfully');
 }
 
-// PUBLISH WEBSITE
+// =========================================
+// 10. PUBLISH OR UPDATE PAGE
+// =========================================
 
 async function publish() {
   if (!user) {
-    return status('Sign in first.');
+    status('Please sign in first.');
+    return;
   }
 
-  if (!$('title').value.trim()) {
-    return status('Enter a website title.');
+  const title =
+    $('title').value.trim();
+
+  if (!title) {
+    status('Please enter a page title.');
+    return;
   }
 
-  const btn = $('publish');
+  const publishButton = $('publish');
 
-  btn.disabled = true;
+  publishButton.disabled = true;
 
-  status('Publishing your website...');
+  status('Publishing your page...');
 
   let uploadedPath = '';
   let saved = false;
 
   try {
-    let newUrl = imageUrl;
-    let newPath = imagePath;
+    let newImageUrl = imageUrl;
+    let newImagePath = imagePath;
 
-    // IMAGE UPLOAD
+    // Upload new image if selected
 
     if (imageFile) {
-      const allowed = {
+      const types = {
         'image/jpeg': 'jpg',
         'image/png': 'png',
         'image/webp': 'webp'
       };
 
-      const ext = allowed[imageFile.type];
+      const extension =
+        types[imageFile.type];
 
-      if (!ext || imageFile.size > 5 * 1024 * 1024) {
+      if (!extension) {
         throw new Error(
-          'Choose JPG, PNG or WEBP under 5 MB.'
+          'Unsupported image type.'
         );
       }
+
+      if (
+        imageFile.size >
+        5 * 1024 * 1024
+      ) {
+        throw new Error(
+          'Image must be under 5 MB.'
+        );
+      }
+
+      status('Uploading image...');
 
       uploadedPath =
-        `${user.id}/${crypto.randomUUID()}.${ext}`;
+        `${user.id}/${crypto.randomUUID()}.${extension}`;
 
-      const up = await db.storage
-        .from('page-images')
-        .upload(
-          uploadedPath,
-          imageFile,
-          {
-            contentType: imageFile.type,
-            upsert: false
-          }
-        );
+      const { error: uploadError } =
+        await db.storage
+          .from('page-images')
+          .upload(
+            uploadedPath,
+            imageFile,
+            {
+              contentType: imageFile.type,
+              upsert: false
+            }
+          );
 
-      if (up.error) {
-        throw up.error;
+      if (uploadError) {
+        throw uploadError;
       }
 
-      newUrl = db.storage
-        .from('page-images')
-        .getPublicUrl(uploadedPath)
-        .data.publicUrl;
+      const { data: imageData } =
+        db.storage
+          .from('page-images')
+          .getPublicUrl(
+            uploadedPath
+          );
 
-      newPath = uploadedPath;
+      newImageUrl =
+        imageData.publicUrl;
+
+      newImagePath =
+        uploadedPath;
     }
 
-    // PREPARE PAGE DATA
+    status('Saving website...');
+
+    // Build database record
 
     const payload = {
       ...dataFromForm(),
-      image_url: newUrl,
-      image_path: newPath,
+      image_url: newImageUrl,
+      image_path: newImagePath,
       user_id: user.id
     };
 
     let result;
 
-    // UPDATE PAGE
-
     if (editingId) {
+      // Update existing page
+
       result = await db
         .from('pages')
         .update(payload)
@@ -470,8 +622,9 @@ async function publish() {
         .eq('user_id', user.id)
         .select('id')
         .single();
+
     } else {
-      // CREATE NEW PAGE
+      // Create new page
 
       result = await db
         .from('pages')
@@ -486,43 +639,48 @@ async function publish() {
 
     saved = true;
 
-    const id = result.data.id;
+    const pageId =
+      result.data.id;
 
-    editingId = id;
+    const previousImagePath =
+      imagePath;
 
-    const oldImagePath = imagePath;
+    editingId = pageId;
 
-    imageUrl = newUrl;
-    imagePath = newPath;
+    imageUrl = newImageUrl;
+    imagePath = newImagePath;
+
     imageFile = null;
 
-    if (localImage) {
-      URL.revokeObjectURL(localImage);
-    }
-
-    localImage = '';
+    clearLocalImage();
 
     $('image').value = '';
 
-    // DELETE REPLACED IMAGE
+    // Clean up old replaced image
 
     if (
       uploadedPath &&
-      oldImagePath &&
-      oldImagePath !== newPath
+      previousImagePath &&
+      previousImagePath !== newImagePath
     ) {
-      const { error } = await db.storage
-        .from('page-images')
-        .remove([oldImagePath]);
+      const { error: cleanupError } =
+        await db.storage
+          .from('page-images')
+          .remove([
+            previousImagePath
+          ]);
 
-      if (error) {
-        console.warn(error.message);
+      if (cleanupError) {
+        console.warn(
+          cleanupError.message
+        );
       }
     }
 
-    // PUBLIC URL
+    // Generate public link
 
-    const url = publicUrl(id);
+    const url =
+      publicUrl(pageId);
 
     $('shareUrl').value = url;
 
@@ -530,274 +688,385 @@ async function publish() {
 
     $('result').hidden = false;
 
-    // GENERATE QR CODE
+    // Generate QR code
 
-    if (window.QRCode) {
-      await QRCode.toCanvas(
-        $('qr'),
-        url,
-        {
-          width: 220,
-          margin: 2
-        }
-      );
+    if (
+      window.QRCode &&
+      typeof QRCode.toCanvas === 'function'
+    ) {
+      try {
+        await QRCode.toCanvas(
+          $('qr'),
+          url,
+          {
+            width: 220,
+            margin: 2
+          }
+        );
 
-      $('downloadQR').href =
-        $('qr').toDataURL('image/png');
+        $('downloadQR').href =
+          $('qr').toDataURL(
+            'image/png'
+          );
 
-      $('downloadQR').download =
-        'pageforge-qr.png';
+        $('downloadQR').download =
+          'pageforge-qr.png';
+
+      } catch (qrError) {
+        console.warn(
+          'QR generation failed:',
+          qrError
+        );
+      }
     }
 
-    status('Website published successfully!');
+    status(
+      'Page published successfully!'
+    );
 
     await loadPages();
 
-  } catch (e) {
-    if (uploadedPath && !saved) {
+  } catch (error) {
+    // Remove image only if database
+    // saving was unsuccessful
+
+    if (
+      uploadedPath &&
+      !saved
+    ) {
       await db.storage
         .from('page-images')
-        .remove([uploadedPath]);
+        .remove([
+          uploadedPath
+        ]);
     }
 
-    status('Error: ' + e.message);
+    status(
+      'Publishing failed: ' +
+      getErrorMessage(error)
+    );
+
+    console.error(error);
 
   } finally {
-    btn.disabled = false;
+    publishButton.disabled = false;
   }
 }
 
-// REFRESH LOGIN SESSION
+// =========================================
+// 11. AUTHENTICATION SESSION
+// =========================================
 
 async function refreshAuth() {
-  const {
-    data: { user: current },
-    error
-  } = await db.auth.getUser();
+  try {
+    const {
+      data: { user: current },
+      error
+    } = await db.auth.getUser();
 
-  if (error) {
-    console.warn(error.message);
-  }
+    if (error) throw error;
 
-  user = current;
+    user = current;
 
-  $('auth').hidden = !!user;
-  $('editor').hidden = !user;
-  $('logout').hidden = !user;
+    $('auth').hidden = !!user;
+    $('editor').hidden = !user;
+    $('logout').hidden = !user;
 
-  if (user) {
-    await loadPages();
+    if (user) {
+      await loadPages();
+    }
+
+  } catch (error) {
+    console.error(
+      'Authentication error:',
+      error
+    );
+
+    status(
+      'Authentication error: ' +
+      getErrorMessage(error)
+    );
   }
 }
 
-// SIGNUP AND LOGIN
+// =========================================
+// 12. SIGNUP / LOGIN
+// =========================================
 
 async function authenticate(mode) {
-  if (!db) return;
+  const email =
+    $('email').value.trim();
 
-  const email = $('email').value.trim();
-  const password = $('password').value;
+  const password =
+    $('password').value;
 
   if (!email || !password) {
-    alert('Enter email and password');
+    alert(
+      'Please enter email and password.'
+    );
     return;
   }
 
-  const { error, data } =
-    mode === 'signup'
-      ? await db.auth.signUp({
-          email,
-          password
-        })
-      : await db.auth.signInWithPassword({
+  if (password.length < 6) {
+    alert(
+      'Password must contain at least 6 characters.'
+    );
+    return;
+  }
+
+  const signInButton =
+    $('signin');
+
+  const signUpButton =
+    $('signup');
+
+  signInButton.disabled = true;
+  signUpButton.disabled = true;
+
+  try {
+    let result;
+
+    if (mode === 'signup') {
+      result = await db.auth.signUp({
+        email,
+        password
+      });
+
+    } else {
+      result =
+        await db.auth.signInWithPassword({
           email,
           password
         });
+    }
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+    if (result.error) {
+      throw result.error;
+    }
 
-  if (
-    mode === 'signup' &&
-    !data.session
-  ) {
+    if (
+      mode === 'signup' &&
+      !result.data.session
+    ) {
+      alert(
+        'Account created. Check your email to confirm your account.'
+      );
+    }
+
+    await refreshAuth();
+
+  } catch (error) {
     alert(
-      'Check your email to confirm your account.'
+      'Authentication failed: ' +
+      getErrorMessage(error)
     );
-  }
 
-  await refreshAuth();
+    console.error(error);
+
+  } finally {
+    signInButton.disabled = false;
+    signUpButton.disabled = false;
+  }
 }
 
-// DISPLAY PUBLIC WEBSITE
+// =========================================
+// 13. DISPLAY PUBLIC PAGE
+// =========================================
 
 async function showPublic(id) {
   $('builder').hidden = true;
+
   $('publicPage').hidden = false;
 
-  const target = $('publishedContent');
+  const target =
+    $('publishedContent');
 
-  target.textContent = 'Loading webpage...';
+  target.textContent =
+    'Loading webpage...';
 
-  if (!db) {
+  try {
+    const { data, error } = await db
+      .from('pages')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+
+    if (!data) {
+      throw new Error(
+        'Page not found.'
+      );
+    }
+
+    document.title =
+      data.title + ' | PageForge';
+
+    render(
+      target,
+      data,
+      data.image_url
+    );
+
+  } catch (error) {
     target.textContent =
-      'Configure Supabase first.';
-    return;
+      'Unable to load page: ' +
+      getErrorMessage(error);
   }
-
-  const { data, error } = await db
-    .from('pages')
-    .select('*')
-    .eq('id', id)
-    .single();
-
-  if (error || !data) {
-    target.textContent =
-      'Page not found or not public.';
-    return;
-  }
-
-  document.title =
-    data.title + ' · PageForge';
-
-  render(
-    target,
-    data,
-    data.image_url
-  );
 }
 
-// INITIALIZE APPLICATION
+// =========================================
+// 14. IMAGE UPLOAD PREVIEW
+// =========================================
+
+function handleImage(event) {
+  const file =
+    event.target.files[0];
+
+  if (!file) return;
+
+  const allowed = [
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ];
+
+  if (
+    !allowed.includes(file.type) ||
+    file.size > 5 * 1024 * 1024
+  ) {
+    alert(
+      'Choose JPG, PNG or WEBP under 5 MB.'
+    );
+
+    event.target.value = '';
+    return;
+  }
+
+  imageFile = file;
+
+  clearLocalImage();
+
+  localImage =
+    URL.createObjectURL(file);
+
+  preview();
+}
+
+// =========================================
+// 15. INITIALIZE PAGEFORGE
+// =========================================
 
 async function init() {
-  const id = new URLSearchParams(
-    location.search
-  ).get('page');
+  // Detect public page URL
 
-  // PUBLIC PAGE MODE
+  const pageId =
+    new URLSearchParams(
+      window.location.search
+    ).get('page');
 
-  if (id) {
-    await showPublic(id);
+  if (pageId) {
+    await showPublic(pageId);
     return;
   }
 
-  // CHECK SUPABASE CONFIGURATION
-
-  if (!db) {
-    $('auth').innerHTML = `
-      <h2>Setup required</h2>
-      <p>
-        Configure Supabase in script.js.
-      </p>
-    `;
-
-    return;
-  }
-
-  // SIGN IN
+  // Sign in button
 
   $('signin').onclick = () =>
     authenticate('signin');
 
-  // SIGN UP
+  // Sign up button
 
   $('signup').onclick = () =>
     authenticate('signup');
 
-  // LOGOUT
+  // Logout button
 
   $('logout').onclick = async () => {
-    await db.auth.signOut();
+    const { error } =
+      await db.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     user = null;
+
+    clearEditor();
 
     await refreshAuth();
   };
 
-  // PUBLISH
+  // Publish button
 
   $('publish').onclick = publish;
 
-  // RESET
+  // New page button
 
   $('reset').onclick = clearEditor;
 
-  // COPY URL
+  // Copy URL
 
   $('copy').onclick = async () => {
+    const url =
+      $('shareUrl').value;
+
     try {
       await navigator.clipboard.writeText(
-        $('shareUrl').value
+        url
       );
 
-      status('URL copied successfully!');
+      status(
+        'URL copied successfully!'
+      );
+
     } catch {
       $('shareUrl').select();
-      status('Select and copy the URL.');
+
+      status(
+        'Select and copy the URL.'
+      );
     }
   };
 
-  // LIVE PREVIEW EVENTS
+  // Live preview inputs
 
-  for (const k of keys) {
-    $(k).addEventListener(
+  for (const key of keys) {
+    $(key).addEventListener(
       'input',
       preview
     );
   }
 
-  // IMAGE SELECTION
+  // Image input
 
-  $('image').onchange = e => {
-    const f = e.target.files[0];
+  $('image').addEventListener(
+    'change',
+    handleImage
+  );
 
-    if (!f) return;
-
-    if (
-      ![
-        'image/jpeg',
-        'image/png',
-        'image/webp'
-      ].includes(f.type) ||
-      f.size > 5 * 1024 * 1024
-    ) {
-      alert(
-        'Choose a JPG, PNG or WEBP image under 5 MB'
-      );
-
-      e.target.value = '';
-      return;
-    }
-
-    imageFile = f;
-
-    if (localImage) {
-      URL.revokeObjectURL(localImage);
-    }
-
-    localImage = URL.createObjectURL(f);
-
-    preview();
-  };
-
-  // INITIAL PREVIEW
+  // Render initial preview
 
   preview();
 
-  // CHECK AUTHENTICATION
+  // Load authentication session
 
   await refreshAuth();
 
-  // LISTEN FOR LOGIN CHANGES
+  // Listen for login/logout
 
   db.auth.onAuthStateChange(() => {
-    setTimeout(refreshAuth, 0);
+    setTimeout(
+      refreshAuth,
+      0
+    );
   });
 }
 
-// START PAGEFORGE
+// =========================================
+// 16. START APPLICATION
+// =========================================
 
 window.addEventListener(
   'DOMContentLoaded',
