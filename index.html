@@ -1,47 +1,36 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-
   <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
+        content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0b1020">
-
   <meta name="description"
-    content="Create beautiful websites with PageForge. Upload images, publish pages and generate QR codes.">
+        content="Create beautiful websites with PageForge.">
 
   <title>PageForge | Website Generator</title>
 
-  <!-- STYLESHEET -->
-  <link rel="stylesheet" href="./style.css?v=4">
+  <link rel="stylesheet" href="./style.css?v=6">
 
-  <!-- SUPABASE LIBRARY -->
-  <script
-    defer
+  <!-- Supabase -->
+  <script defer
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js">
   </script>
 
-  <!-- QR CODE LIBRARY -->
-  <script
-    defer
+  <!-- QR code generator -->
+  <script defer
     src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js">
   </script>
 
-  <!-- MAIN JAVASCRIPT -->
-  <script
-    defer
-    src="./script.js?v=4">
-  </script>
+  <!-- PageForge application -->
+  <script defer src="./script.js?v=6"></script>
 
   <style>
     [hidden] {
       display: none !important;
     }
 
-    /* Fallback styling */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -100,7 +89,8 @@
       box-sizing: border-box;
     }
 
-    #status {
+    #status,
+    #authStatus {
       overflow-wrap: anywhere;
     }
 
@@ -111,22 +101,25 @@
       text-align: center;
       font-size: 14px;
     }
-  </style>
 
+    #authStatus:not(:empty) {
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    #resendConfirmation {
+      margin-top: 12px;
+    }
+  </style>
 </head>
 
 <body>
 
-  <!-- LIBRARY ERROR -->
-  <div
-    id="libraryError"
-    role="alert"
-    hidden>
-  </div>
+  <!-- Library error -->
+  <div id="libraryError" role="alert" hidden></div>
 
-  <!-- HEADER -->
+  <!-- Header -->
   <header>
-
     <a class="brand" href="./">
       <span>◆</span>
       PageForge
@@ -141,41 +134,37 @@
         Log out
       </button>
     </div>
-
   </header>
 
-  <!-- WEBSITE BUILDER -->
+  <!-- Builder -->
   <main id="builder">
 
-    <!-- INTRODUCTION -->
     <div class="intro">
+      <p class="eyebrow">WEBSITE GENERATOR</p>
 
-      <p class="eyebrow">
-        WEBSITE GENERATOR
-      </p>
-
-      <h1>
-        Make a page. Share it anywhere.
-      </h1>
+      <h1>Make a page. Share it anywhere.</h1>
 
       <p>
         Upload your image, choose colors,
         publish your website and get a
         unique URL and QR code.
       </p>
-
     </div>
 
-    <!-- LOGIN / SIGNUP -->
+    <!-- Authentication -->
     <section id="auth" class="panel">
 
-      <h2>Sign in to publish</h2>
+      <h2>Welcome to PageForge</h2>
+
+      <p class="muted">
+        Sign in or create an account to
+        build and publish your pages.
+      </p>
 
       <div class="fields">
 
         <label>
           Email
-
           <input
             id="email"
             type="email"
@@ -185,7 +174,6 @@
 
         <label>
           Password
-
           <input
             id="password"
             type="password"
@@ -198,9 +186,7 @@
 
       <div class="actions">
 
-        <button
-          id="signin"
-          type="button">
+        <button id="signin" type="button">
           Sign in
         </button>
 
@@ -213,27 +199,40 @@
 
       </div>
 
+      <p
+        id="authStatus"
+        role="status"
+        aria-live="polite">
+      </p>
+
+      <button
+        id="resendConfirmation"
+        type="button"
+        class="ghost"
+        hidden>
+        Resend confirmation email
+      </button>
+
       <p class="muted">
-        Email confirmation may be required
-        after creating an account.
+        If email confirmation is enabled,
+        check your inbox after signup.
+        Open the newest confirmation link
+        to activate your account.
       </p>
 
     </section>
 
-    <!-- EDITOR -->
+    <!-- Editor -->
     <div id="editor" class="layout" hidden>
 
-      <!-- LEFT SIDE -->
       <section class="panel">
 
         <h2>Customize your page</h2>
 
         <div class="fields">
 
-          <!-- TITLE -->
           <label>
             Page title
-
             <input
               id="title"
               type="text"
@@ -241,10 +240,8 @@
               value="Welcome to my page">
           </label>
 
-          <!-- SUBTITLE -->
           <label>
             Subtitle
-
             <input
               id="subtitle"
               type="text"
@@ -252,20 +249,16 @@
               value="Everything you need, in one place">
           </label>
 
-          <!-- DESCRIPTION -->
           <label>
             Description
-
             <textarea
               id="description"
               maxlength="3000"
               rows="5">A beautiful page made with PageForge.</textarea>
           </label>
 
-          <!-- BUTTON TEXT -->
           <label>
             Button text
-
             <input
               id="buttonText"
               type="text"
@@ -273,32 +266,26 @@
               value="Contact us">
           </label>
 
-          <!-- BUTTON URL -->
           <label>
             Button URL
-
             <input
               id="buttonUrl"
               type="url"
               placeholder="https://example.com">
           </label>
 
-          <!-- IMAGE UPLOAD -->
           <label>
             Cover image (JPG, PNG, WEBP; max 5 MB)
-
             <input
               id="image"
               type="file"
               accept="image/jpeg,image/png,image/webp">
           </label>
 
-          <!-- COLORS -->
           <div class="colors">
 
             <label>
               Background
-
               <input
                 id="background"
                 type="color"
@@ -307,7 +294,6 @@
 
             <label>
               Accent
-
               <input
                 id="accent"
                 type="color"
@@ -316,7 +302,6 @@
 
             <label>
               Text
-
               <input
                 id="textColor"
                 type="color"
@@ -324,15 +309,11 @@
             </label>
 
           </div>
-
         </div>
 
-        <!-- PUBLISH BUTTONS -->
         <div class="actions">
 
-          <button
-            id="publish"
-            type="button">
+          <button id="publish" type="button">
             Publish page
           </button>
 
@@ -345,7 +326,6 @@
 
         </div>
 
-        <!-- STATUS -->
         <p
           id="status"
           role="status"
@@ -354,19 +334,15 @@
 
       </section>
 
-      <!-- RIGHT SIDE -->
       <section>
 
-        <!-- LIVE PREVIEW -->
+        <!-- Live preview -->
         <div class="panel previewWrap">
-
           <h2>Live preview</h2>
-
           <div id="preview"></div>
-
         </div>
 
-        <!-- PUBLISH RESULT -->
+        <!-- Published result -->
         <div
           id="result"
           class="panel"
@@ -386,9 +362,7 @@
 
           <div class="actions">
 
-            <button
-              id="copy"
-              type="button">
+            <button id="copy" type="button">
               Copy URL
             </button>
 
@@ -402,7 +376,6 @@
 
           </div>
 
-          <!-- QR CODE -->
           <canvas
             id="qr"
             width="220"
@@ -412,13 +385,13 @@
           <a
             id="downloadQR"
             class="btn ghost"
-            download="page-qr.png">
+            download="pageforge-qr.png">
             Download QR
           </a>
 
         </div>
 
-        <!-- SAVED PAGES -->
+        <!-- Saved pages -->
         <div class="panel">
 
           <h2>My pages</h2>
@@ -436,7 +409,7 @@
 
   </main>
 
-  <!-- PUBLIC WEBSITE VIEW -->
+  <!-- Public page -->
   <main id="publicPage" hidden>
 
     <div id="publishedContent">
@@ -444,13 +417,14 @@
     </div>
 
     <p class="footer">
-
-     <a href="www.google.com"></a>
+      <a href="./">
+        Create your own page with PageForge
+      </a>
     </p>
 
   </main>
 
-  <!-- CHECK LIBRARY LOADING -->
+  <!-- Check external libraries -->
   <script>
     window.addEventListener('load', function () {
       const errorBox =
@@ -461,21 +435,16 @@
         typeof window.supabase.createClient !== 'function'
       ) {
         errorBox.hidden = false;
-
         errorBox.textContent =
-          'Supabase library failed to load. Check your internet connection and the Supabase script URL.';
-
+          'Supabase library failed to load. ' +
+          'Check your internet connection.';
         return;
       }
 
-      console.log(
-        'Supabase library loaded successfully.'
-      );
+      console.log('Supabase loaded.');
 
       if (!window.QRCode) {
-        console.warn(
-          'QR Code library failed to load.'
-        );
+        console.warn('QR library failed to load.');
       }
     });
   </script>
