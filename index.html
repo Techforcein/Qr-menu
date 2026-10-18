@@ -1,7 +1,487 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PageForge</title><link rel="stylesheet" href="style.css"><script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script><script defer src="script.js"></script></head><body>
-<header><a class="brand" href="./"><span>◆</span> PageForge</a><div id="account"><button id="logout" class="ghost" hidden>Log out</button></div></header>
-<main id="builder"><div class="intro"><p class="eyebrow">WEBSITE GENERATOR</p><h1>Make a page. Share it anywhere.</h1><p>Upload your image, choose colors, publish and get a URL and QR code.</p></div>
-<section id="auth" class="panel"><h2>Sign in to publish</h2><div class="fields"><label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters"></label></div><div class="actions"><button id="signin">Sign in</button><button id="signup" class="ghost">Create account</button></div><p class="muted">Email confirmation may be required.</p></section>
-<div id="editor" class="layout" hidden><section class="panel"><h2>Customize your page</h2><div class="fields"><label>Page title<input id="title" maxlength="100" value="Welcome to my page"></label><label>Subtitle<input id="subtitle" maxlength="160" value="Everything you need, in one place"></label><label>Description<textarea id="description" maxlength="3000" rows="5">A beautiful page made with PageForge.</textarea></label><label>Button text<input id="buttonText" maxlength="50" value="Contact us"></label><label>Button URL<input id="buttonUrl" type="url" placeholder="https://example.com"></label><label>Cover image (JPG, PNG, WEBP; max 5 MB)<input id="image" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="colors"><label>Background<input id="background" type="color" value="#0b1020"></label><label>Accent<input id="accent" type="color" value="#8b5cf6"></label><label>Text<input id="textColor" type="color" value="#ffffff"></label></div></div><div class="actions"><button id="publish">Publish page</button><button id="reset" class="ghost">New page</button></div><p id="status" role="status"></p></section><section><div class="panel previewWrap"><h2>Live preview</h2><div id="preview"></div></div><div id="result" class="panel" hidden><h2>Your page is live!</h2><input id="shareUrl" readonly><div class="actions"><button id="copy">Copy URL</button><a id="openPage" target="_blank" rel="noopener" class="btn ghost">Open page</a></div><canvas id="qr"></canvas><a id="downloadQR" class="btn ghost" download="page-qr.png">Download QR</a></div><div class="panel"><h2>My pages</h2><div id="myPages" class="pages"></div></div></section></div></main>
-<main id="publicPage" hidden><div id="publishedContent"></div><p class="footer"><a href="./">Made with PageForge</a></p></main>
-</body></html>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <meta name="theme-color" content="#0b1020">
+
+  <meta name="description"
+    content="Create beautiful websites with PageForge. Upload images, publish pages and generate QR codes.">
+
+  <title>PageForge | Website Generator</title>
+
+  <!-- STYLESHEET -->
+  <link rel="stylesheet" href="./style.css?v=4">
+
+  <!-- SUPABASE LIBRARY -->
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js">
+  </script>
+
+  <!-- QR CODE LIBRARY -->
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js">
+  </script>
+
+  <!-- MAIN JAVASCRIPT -->
+  <script
+    defer
+    src="./script.js?v=4">
+  </script>
+
+  <style>
+    [hidden] {
+      display: none !important;
+    }
+
+    /* Fallback styling */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .rendered {
+      min-height: 300px;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .renderedInner {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .renderedInner img {
+      display: block;
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin: 0 auto 24px;
+    }
+
+    .renderedInner h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      overflow-wrap: anywhere;
+    }
+
+    .renderedInner p {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.7;
+    }
+
+    .renderedInner a {
+      display: inline-block;
+      padding: 14px 25px;
+      margin-top: 15px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    #qr {
+      display: block;
+      max-width: 100%;
+      margin: 20px auto;
+      background: white;
+      border-radius: 10px;
+    }
+
+    #shareUrl {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #status {
+      overflow-wrap: anywhere;
+    }
+
+    #libraryError {
+      background: #7f1d1d;
+      color: white;
+      padding: 14px 20px;
+      text-align: center;
+      font-size: 14px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- LIBRARY ERROR -->
+  <div
+    id="libraryError"
+    role="alert"
+    hidden>
+  </div>
+
+  <!-- HEADER -->
+  <header>
+
+    <a class="brand" href="./">
+      <span>◆</span>
+      PageForge
+    </a>
+
+    <div id="account">
+      <button
+        id="logout"
+        class="ghost"
+        type="button"
+        hidden>
+        Log out
+      </button>
+    </div>
+
+  </header>
+
+  <!-- WEBSITE BUILDER -->
+  <main id="builder">
+
+    <!-- INTRODUCTION -->
+    <div class="intro">
+
+      <p class="eyebrow">
+        WEBSITE GENERATOR
+      </p>
+
+      <h1>
+        Make a page. Share it anywhere.
+      </h1>
+
+      <p>
+        Upload your image, choose colors,
+        publish your website and get a
+        unique URL and QR code.
+      </p>
+
+    </div>
+
+    <!-- LOGIN / SIGNUP -->
+    <section id="auth" class="panel">
+
+      <h2>Sign in to publish</h2>
+
+      <div class="fields">
+
+        <label>
+          Email
+
+          <input
+            id="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com">
+        </label>
+
+        <label>
+          Password
+
+          <input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            minlength="6"
+            placeholder="At least 6 characters">
+        </label>
+
+      </div>
+
+      <div class="actions">
+
+        <button
+          id="signin"
+          type="button">
+          Sign in
+        </button>
+
+        <button
+          id="signup"
+          type="button"
+          class="ghost">
+          Create account
+        </button>
+
+      </div>
+
+      <p class="muted">
+        Email confirmation may be required
+        after creating an account.
+      </p>
+
+    </section>
+
+    <!-- EDITOR -->
+    <div id="editor" class="layout" hidden>
+
+      <!-- LEFT SIDE -->
+      <section class="panel">
+
+        <h2>Customize your page</h2>
+
+        <div class="fields">
+
+          <!-- TITLE -->
+          <label>
+            Page title
+
+            <input
+              id="title"
+              type="text"
+              maxlength="100"
+              value="Welcome to my page">
+          </label>
+
+          <!-- SUBTITLE -->
+          <label>
+            Subtitle
+
+            <input
+              id="subtitle"
+              type="text"
+              maxlength="160"
+              value="Everything you need, in one place">
+          </label>
+
+          <!-- DESCRIPTION -->
+          <label>
+            Description
+
+            <textarea
+              id="description"
+              maxlength="3000"
+              rows="5">A beautiful page made with PageForge.</textarea>
+          </label>
+
+          <!-- BUTTON TEXT -->
+          <label>
+            Button text
+
+            <input
+              id="buttonText"
+              type="text"
+              maxlength="50"
+              value="Contact us">
+          </label>
+
+          <!-- BUTTON URL -->
+          <label>
+            Button URL
+
+            <input
+              id="buttonUrl"
+              type="url"
+              placeholder="https://example.com">
+          </label>
+
+          <!-- IMAGE UPLOAD -->
+          <label>
+            Cover image (JPG, PNG, WEBP; max 5 MB)
+
+            <input
+              id="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp">
+          </label>
+
+          <!-- COLORS -->
+          <div class="colors">
+
+            <label>
+              Background
+
+              <input
+                id="background"
+                type="color"
+                value="#0b1020">
+            </label>
+
+            <label>
+              Accent
+
+              <input
+                id="accent"
+                type="color"
+                value="#8b5cf6">
+            </label>
+
+            <label>
+              Text
+
+              <input
+                id="textColor"
+                type="color"
+                value="#ffffff">
+            </label>
+
+          </div>
+
+        </div>
+
+        <!-- PUBLISH BUTTONS -->
+        <div class="actions">
+
+          <button
+            id="publish"
+            type="button">
+            Publish page
+          </button>
+
+          <button
+            id="reset"
+            type="button"
+            class="ghost">
+            New page
+          </button>
+
+        </div>
+
+        <!-- STATUS -->
+        <p
+          id="status"
+          role="status"
+          aria-live="polite">
+        </p>
+
+      </section>
+
+      <!-- RIGHT SIDE -->
+      <section>
+
+        <!-- LIVE PREVIEW -->
+        <div class="panel previewWrap">
+
+          <h2>Live preview</h2>
+
+          <div id="preview"></div>
+
+        </div>
+
+        <!-- PUBLISH RESULT -->
+        <div
+          id="result"
+          class="panel"
+          hidden>
+
+          <h2>Your page is live!</h2>
+
+          <p class="muted">
+            Copy the URL or share the QR code.
+          </p>
+
+          <input
+            id="shareUrl"
+            type="text"
+            readonly
+            aria-label="Published page URL">
+
+          <div class="actions">
+
+            <button
+              id="copy"
+              type="button">
+              Copy URL
+            </button>
+
+            <a
+              id="openPage"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn ghost">
+              Open page
+            </a>
+
+          </div>
+
+          <!-- QR CODE -->
+          <canvas
+            id="qr"
+            width="220"
+            height="220">
+          </canvas>
+
+          <a
+            id="downloadQR"
+            class="btn ghost"
+            download="page-qr.png">
+            Download QR
+          </a>
+
+        </div>
+
+        <!-- SAVED PAGES -->
+        <div class="panel">
+
+          <h2>My pages</h2>
+
+          <div
+            id="myPages"
+            class="pages">
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- PUBLIC WEBSITE VIEW -->
+  <main id="publicPage" hidden>
+
+    <div id="publishedContent">
+      Loading webpage...
+    </div>
+
+    <p class="footer">
+
+      <a href="./">
+        Made with PageForge
+      </a>
+
+    </p>
+
+  </main>
+
+  <!-- CHECK LIBRARY LOADING -->
+  <script>
+    window.addEventListener('load', function () {
+      const errorBox =
+        document.getElementById('libraryError');
+
+      if (
+        !window.supabase ||
+        typeof window.supabase.createClient !== 'function'
+      ) {
+        errorBox.hidden = false;
+
+        errorBox.textContent =
+          'Supabase library failed to load. Check your internet connection and the Supabase script URL.';
+
+        return;
+      }
+
+      console.log(
+        'Supabase library loaded successfully.'
+      );
+
+      if (!window.QRCode) {
+        console.warn(
+          'QR Code library failed to load.'
+        );
+      }
+    });
+  </script>
+
+</body>
+</html>
