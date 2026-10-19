@@ -7,10 +7,11 @@
         content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0b1020">
   <meta name="description"
-        content="Create beautiful websites with PageForge.">
+        content="Build websites and restaurant QR menus with PageForge.">
 
-  <title>PageForge | Website Generator</title>
+  <title>PageForge | Website & Restaurant Studio</title>
 
+  <!-- Existing stylesheet -->
   <link rel="stylesheet" href="./style.css?v=6">
 
   <!-- Supabase -->
@@ -23,7 +24,7 @@
     src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js">
   </script>
 
-  <!-- PageForge application -->
+  <!-- Existing PageForge JavaScript -->
   <script defer src="./script.js?v=6"></script>
 
   <style>
@@ -31,10 +32,148 @@
       display: none !important;
     }
 
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
     }
+
+    /* New dashboard */
+
+    .pf-dashboard {
+      padding: 12px 0 30px;
+    }
+
+    .pf-dashboard-title {
+      margin-bottom: 20px;
+    }
+
+    .pf-dashboard-title h2 {
+      font-size: clamp(24px, 5vw, 34px);
+      margin: 0 0 10px;
+    }
+
+    .pf-dashboard-title p {
+      color: #a6b2c7;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .pf-studio-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .pf-studio-card {
+      background: linear-gradient(
+        145deg,
+        #1b2440,
+        #111827
+      );
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .pf-studio-card.restaurant {
+      background: linear-gradient(
+        145deg,
+        #173d31,
+        #101f1c
+      );
+      border-color: #2b5b48;
+    }
+
+    .pf-studio-icon {
+      width: 62px;
+      height: 62px;
+      display: grid;
+      place-items: center;
+      background: #302450;
+      border-radius: 18px;
+      font-size: 30px;
+    }
+
+    .restaurant .pf-studio-icon {
+      background: #26503c;
+    }
+
+    .pf-studio-card h3 {
+      font-size: 22px;
+      margin: 0;
+      color: #fff;
+    }
+
+    .pf-studio-card p {
+      color: #cbd5e1;
+      line-height: 1.6;
+      font-size: 14px;
+      margin: 0;
+      flex: 1;
+    }
+
+    .pf-studio-action {
+      display: block;
+      width: 100%;
+      text-align: center;
+      border: 0;
+      border-radius: 12px;
+      padding: 15px;
+      background: #8b5cf6;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .restaurant .pf-studio-action {
+      background: #16a34a;
+    }
+
+    .pf-dashboard-note {
+      margin-top: 20px;
+      padding: 18px;
+      border: 1px solid #334155;
+      border-radius: 15px;
+      background: #151c2c;
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .pf-editor-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .pf-editor-toolbar h2 {
+      margin: 0;
+    }
+
+    .pf-back-button {
+      background: #252d41;
+      color: #fff;
+      border: 1px solid #46516b;
+      border-radius: 10px;
+      padding: 11px 15px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* Existing PageForge preview */
 
     .rendered {
       min-height: 300px;
@@ -110,6 +249,20 @@
     #resendConfirmation {
       margin-top: 12px;
     }
+
+    @media (max-width: 700px) {
+      .pf-studio-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pf-studio-card {
+        padding: 20px;
+      }
+
+      .pf-studio-card h3 {
+        font-size: 20px;
+      }
+    }
   </style>
 </head>
 
@@ -136,18 +289,21 @@
     </div>
   </header>
 
-  <!-- Builder -->
+  <!-- Main builder -->
   <main id="builder">
 
     <div class="intro">
-      <p class="eyebrow">WEBSITE GENERATOR</p>
+      <p class="eyebrow">
+        PAGEFORGE STUDIO
+      </p>
 
-      <h1>Make a page. Share it anywhere.</h1>
+      <h1>
+        Build something amazing.
+      </h1>
 
       <p>
-        Upload your image, choose colors,
-        publish your website and get a
-        unique URL and QR code.
+        Create beautiful websites and dynamic
+        restaurant QR menus from one account.
       </p>
     </div>
 
@@ -158,13 +314,14 @@
 
       <p class="muted">
         Sign in or create an account to
-        build and publish your pages.
+        start building your projects.
       </p>
 
       <div class="fields">
 
         <label>
           Email
+
           <input
             id="email"
             type="email"
@@ -174,6 +331,7 @@
 
         <label>
           Password
+
           <input
             id="password"
             type="password"
@@ -222,17 +380,108 @@
 
     </section>
 
-    <!-- Editor -->
+    <!-- NEW PAGEFORGE DASHBOARD -->
+    <section
+      id="studioDashboard"
+      class="pf-dashboard"
+      hidden>
+
+      <div class="pf-dashboard-title">
+
+        <h2>My Studio</h2>
+
+        <p>
+          Choose what you want to create.
+        </p>
+
+      </div>
+
+      <div class="pf-studio-grid">
+
+        <!-- Website Builder -->
+        <div class="pf-studio-card">
+
+          <div class="pf-studio-icon">
+            🌐
+          </div>
+
+          <h3>Website Builder</h3>
+
+          <p>
+            Create and publish custom websites,
+            upload images, choose colors,
+            and generate QR codes.
+          </p>
+
+          <button
+            id="openWebsiteBuilder"
+            class="pf-studio-action"
+            type="button">
+            Create Website →
+          </button>
+
+        </div>
+
+        <!-- Restaurant Studio -->
+        <div class="pf-studio-card restaurant">
+
+          <div class="pf-studio-icon">
+            🍽️
+          </div>
+
+          <h3>Restaurant Studio</h3>
+
+          <p>
+            Create digital restaurant menus
+            with searchable food categories,
+            discounts, mobile templates,
+            and WhatsApp ordering.
+          </p>
+
+          <a
+            class="pf-studio-action"
+            href="./restaurant-builder.html">
+            Create QR Menu →
+          </a>
+
+        </div>
+
+      </div>
+
+      <div class="pf-dashboard-note">
+        <strong>My Projects</strong>
+        <p>
+          Your existing websites are available
+          inside Website Builder. Restaurant
+          menus can be managed in Restaurant Studio.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- Existing Website Editor -->
     <div id="editor" class="layout" hidden>
 
       <section class="panel">
 
-        <h2>Customize your page</h2>
+        <div class="pf-editor-toolbar">
+
+          <h2>Customize your page</h2>
+
+          <button
+            id="backToDashboard"
+            class="pf-back-button"
+            type="button">
+            ← Dashboard
+          </button>
+
+        </div>
 
         <div class="fields">
 
           <label>
             Page title
+
             <input
               id="title"
               type="text"
@@ -242,6 +491,7 @@
 
           <label>
             Subtitle
+
             <input
               id="subtitle"
               type="text"
@@ -251,6 +501,7 @@
 
           <label>
             Description
+
             <textarea
               id="description"
               maxlength="3000"
@@ -259,6 +510,7 @@
 
           <label>
             Button text
+
             <input
               id="buttonText"
               type="text"
@@ -268,6 +520,7 @@
 
           <label>
             Button URL
+
             <input
               id="buttonUrl"
               type="url"
@@ -276,6 +529,7 @@
 
           <label>
             Cover image (JPG, PNG, WEBP; max 5 MB)
+
             <input
               id="image"
               type="file"
@@ -286,6 +540,7 @@
 
             <label>
               Background
+
               <input
                 id="background"
                 type="color"
@@ -294,6 +549,7 @@
 
             <label>
               Accent
+
               <input
                 id="accent"
                 type="color"
@@ -302,6 +558,7 @@
 
             <label>
               Text
+
               <input
                 id="textColor"
                 type="color"
@@ -309,11 +566,14 @@
             </label>
 
           </div>
+
         </div>
 
         <div class="actions">
 
-          <button id="publish" type="button">
+          <button
+            id="publish"
+            type="button">
             Publish page
           </button>
 
@@ -338,8 +598,11 @@
 
         <!-- Live preview -->
         <div class="panel previewWrap">
+
           <h2>Live preview</h2>
+
           <div id="preview"></div>
+
         </div>
 
         <!-- Published result -->
@@ -362,7 +625,9 @@
 
           <div class="actions">
 
-            <button id="copy" type="button">
+            <button
+              id="copy"
+              type="button">
               Copy URL
             </button>
 
@@ -409,7 +674,7 @@
 
   </main>
 
-  <!-- Public page -->
+  <!-- Public website -->
   <main id="publicPage" hidden>
 
     <div id="publishedContent">
@@ -424,29 +689,122 @@
 
   </main>
 
-  <!-- Check external libraries -->
+  <!-- Library checks -->
   <script>
-    window.addEventListener('load', function () {
-      const errorBox =
-        document.getElementById('libraryError');
+    window.addEventListener(
+      'load',
+      function () {
+        const errorBox =
+          document.getElementById(
+            'libraryError'
+          );
 
-      if (
-        !window.supabase ||
-        typeof window.supabase.createClient !== 'function'
-      ) {
-        errorBox.hidden = false;
-        errorBox.textContent =
-          'Supabase library failed to load. ' +
-          'Check your internet connection.';
-        return;
+        if (
+          !window.supabase ||
+          typeof window.supabase.createClient !== 'function'
+        ) {
+          errorBox.hidden = false;
+          errorBox.textContent =
+            'Supabase library failed to load. ' +
+            'Check your internet connection.';
+          return;
+        }
+
+        if (!window.QRCode) {
+          console.warn(
+            'QR library failed to load.'
+          );
+        }
       }
+    );
+  </script>
 
-      console.log('Supabase loaded.');
+  <!-- Dashboard controller -->
+  <script>
+    window.addEventListener(
+      'DOMContentLoaded',
+      function () {
+        const dashboard =
+          document.getElementById(
+            'studioDashboard'
+          );
 
-      if (!window.QRCode) {
-        console.warn('QR library failed to load.');
+        const editor =
+          document.getElementById('editor');
+
+        const logout =
+          document.getElementById('logout');
+
+        const openBuilder =
+          document.getElementById(
+            'openWebsiteBuilder'
+          );
+
+        const backButton =
+          document.getElementById(
+            'backToDashboard'
+          );
+
+        // Don't run on public websites.
+        const isPublic =
+          new URLSearchParams(
+            window.location.search
+          ).has('page');
+
+        if (isPublic) return;
+
+        let currentView = 'dashboard';
+
+        function updateDashboard() {
+          const loggedIn = !logout.hidden;
+
+          if (!loggedIn) {
+            dashboard.hidden = true;
+            return;
+          }
+
+          if (currentView === 'dashboard') {
+            dashboard.hidden = false;
+            editor.hidden = true;
+          } else {
+            dashboard.hidden = true;
+            editor.hidden = false;
+          }
+        }
+
+        openBuilder.addEventListener(
+          'click',
+          function () {
+            currentView = 'editor';
+            updateDashboard();
+            window.scrollTo(0, 0);
+          }
+        );
+
+        backButton.addEventListener(
+          'click',
+          function () {
+            currentView = 'dashboard';
+            updateDashboard();
+            window.scrollTo(0, 0);
+          }
+        );
+
+        // Watch the existing script.js
+        // login/logout visibility changes.
+        const observer =
+          new MutationObserver(
+            updateDashboard
+          );
+
+        observer.observe(logout, {
+          attributes: true,
+          attributeFilter: ['hidden']
+        });
+
+        updateDashboard();
       }
-    });
+    );
   </script>
 
 </body>
