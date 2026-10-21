@@ -1,7 +1,9 @@
 
-/* PageForge Restaurant Studio V3 Navigation Fix */
+/* PageForge Restaurant Studio - Navigation V5 */
 (() => {
-  const pages = [
+  'use strict';
+
+  const PAGES = [
     'restaurants',
     'settings',
     'design',
@@ -12,84 +14,112 @@
 
   const $ = id => document.getElementById(id);
 
-  function navigate(page) {
-    if (!pages.includes(page)) page = 'restaurants';
+  let currentPage = 'restaurants';
 
+  function navigate(page, updateHash = true) {
+    if (!PAGES.includes(page)) page = 'restaurants';
+
+    const studio = $('studio');
     const editor = $('editor');
 
-    // Make the editor visible before opening its screens.
-    if (page !== 'restaurants' && editor) {
-      editor.hidden = false;
+    if (!studio) return;
+
+    currentPage = page;
+
+    // Keep editor visible when showing its screens.
+    // Individual screens are hidden separately.
+    if (editor) {
+      editor.hidden = page === 'restaurants';
+      editor.style.display =
+        page === 'restaurants' ? 'none' : 'block';
     }
 
-    document.querySelectorAll('.studio-screen[data-page]')
-      .forEach(section => {
-        const active = section.dataset.page === page;
-        section.hidden = !active;
-        section.style.display = active ? '' : 'none';
-      });
+    document.querySelectorAll(
+      '.studio-screen[data-page]'
+    ).forEach(section => {
+      const active = section.dataset.page === page;
 
-    document.querySelectorAll('[data-screen]')
-      .forEach(button => {
-        const active = button.dataset.screen === page;
-        button.classList.toggle('active', active);
+      section.hidden = !active;
+      section.style.display = active ? 'block' : 'none';
+    });
 
-        if (active) {
-          button.setAttribute('aria-current', 'page');
-        } else {
-          button.removeAttribute('aria-current');
-        }
-      });
+    document.querySelectorAll(
+      '.studio-nav [data-screen]'
+    ).forEach(button => {
+      const active = button.dataset.screen === page;
 
-    if (location.hash !== '#' + page) {
+      button.classList.toggle('active', active);
+
+      if (active) {
+        button.setAttribute('aria-current', 'page');
+      } else {
+        button.removeAttribute('aria-current');
+      }
+    });
+
+    if (updateHash) {
       history.replaceState(null, '', '#' + page);
     }
 
     window.scrollTo(0, 0);
   }
 
-  function setup() {
-    // Main navigation and Next buttons
-    document.addEventListener('click', event => {
-      const navButton = event.target.closest(
-        '[data-screen], [data-go]'
-      );
+  // Make navigation accessible to restaurant-builder.js
+  window.pfNavigate = navigate;
 
-      if (navButton) {
-        navigate(
-          navButton.dataset.screen || navButton.dataset.go
-        );
+  function setup() {
+    // Use one delegated click listener for all navigation.
+    document.addEventListener('click', event => {
+      const button = event.target.closest('button');
+
+      if (!button) return;
+
+      const targetPage =
+        button.dataset.screen || button.dataset.go;
+
+      if (targetPage) {
+        navigate(targetPage);
         return;
       }
 
-      // Manage buttons are created dynamically by builder.js.
-      const restaurantsBox = $('restaurants');
-      const clickedButton = event.target.closest('button');
+      // Existing Manage buttons are generated dynamically.
+      const list = $('restaurants');
 
       if (
-        restaurantsBox &&
-        clickedButton &&
-        restaurantsBox.contains(clickedButton) &&
-        clickedButton.textContent.trim() === 'Manage'
+        list &&
+        list.contains(button) &&
+        button.textContent.trim() === 'Manage'
       ) {
-        // Allow the original Manage handler to select the restaurant.
-        setTimeout(() => navigate('settings'), 0);
+        // The existing button handler selects the restaurant.
+        // Navigate after the click handler has started.
+        navigate('settings');
+        return;
       }
 
-      if (clickedButton && clickedButton.id === 'newRestaurant') {
-        setTimeout(() => navigate('settings'), 0);
+      if (button.id === 'newRestaurant') {
+        navigate('settings');
       }
     });
 
-    $('saveDesignShortcut')?.addEventListener('click', () => {
-      $('saveRestaurant')?.click();
-    });
+    // Reuse the original save handler.
+    $('saveDesignShortcut')?.addEventListener(
+      'click',
+      () => $('saveRestaurant')?.click()
+    );
 
+    // Support navigation using browser history.
     window.addEventListener('hashchange', () => {
-      navigate(location.hash.slice(1));
+      navigate(location.hash.substring(1), false);
     });
 
-    navigate(location.hash.slice(1) || 'restaurants');
+    // Start on restaurant list, unless a valid screen
+    // was requested in the URL.
+    const requested = location.hash.substring(1);
+
+    navigate(
+      PAGES.includes(requested) ? requested : 'restaurants',
+      false
+    );
   }
 
   if (document.readyState === 'loading') {
@@ -97,6 +127,4 @@
   } else {
     setup();
   }
-
-  window.pfNavigate = navigate;
 })();
