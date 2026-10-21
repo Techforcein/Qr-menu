@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>Pixabay API Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f6fa;
+    }
+    button {
+      background: #6741d9;
+      color: white;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      width: 100%;
+    }
+    #status {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      margin: 18px 0;
+    }
+    #results {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    #results img {
+      width: 100%;
+      border-radius: 10px;
+    }
+  </style>
+  <script defer
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js">
+  </script>
+  <script defer src="./config.js"></script>
+</head>
+<body>
+
+  <h2>PageForge Pixabay Test</h2>
+  <p>Sign in to PageForge before testing.</p>
+
+  <button id="test">Search Food Images</button>
+
+  <p id="status">Ready to test.</p>
+  <div id="results"></div>
+
+  <script>
+    window.addEventListener("load", () => {
+      document.getElementById("test").onclick =
+        async () => {
+          const status =
+            document.getElementById("status");
+          const results =
+            document.getElementById("results");
+
+          results.replaceChildren();
+          status.textContent = "Searching...";
+
+          try {
+            const db = window.pfDb;
+
+            if (!db) {
+              throw Error(
+                "Supabase connection unavailable"
+              );
+            }
+
+            const { data: sessionData, error: authError } =
+              await db.auth.getSession();
+
+            if (authError) throw authError;
+
+            if (!sessionData.session) {
+              throw Error(
+                "Not signed in. Log in to PageForge first."
+              );
+            }
+
+            const { data, error } =
+              await db.functions.invoke(
+                "smooth-handler",
+                {
+                  body: {
+                    query: "paneer butter masala"
+                  }
+                }
+              );
+
+            if (error) {
+              const response =
+                error.context;
+
+              if (response &&
+                  typeof response.json === "function") {
+                const details =
+                  await response.json();
+
+                throw Error(
+                  JSON.stringify(details)
+                );
+              }
+
+              throw error;
+            }
+
+            const images = data?.images || [];
+
+            status.textContent =
+              "Success! Found " +
+              images.length +
+              " images.";
+
+            for (const image of images) {
+              const img =
+                document.createElement("img");
+
+              img.src =
+                image.preview ||
+                image.thumbnail;
+
+              img.alt = "Food image";
+
+              results.append(img);
+            }
+
+          } catch (error) {
+            status.textContent =
+              "Error: " + error.message;
+          }
+        };
+    });
+  </script>
+
+</body>
+</html>
