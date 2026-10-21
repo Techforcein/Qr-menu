@@ -1,6 +1,5 @@
-here
-/* PageForge Restaurant Studio - Multi-screen Navigation */
 
+/* PageForge Restaurant Studio V3 Navigation Fix */
 (() => {
   const pages = [
     'restaurants',
@@ -13,75 +12,84 @@ here
 
   const $ = id => document.getElementById(id);
 
-  function navigate(page, updateHash = true) {
-    if (!pages.includes(page)) {
-      page = 'restaurants';
+  function navigate(page) {
+    if (!pages.includes(page)) page = 'restaurants';
+
+    const editor = $('editor');
+
+    // Make the editor visible before opening its screens.
+    if (page !== 'restaurants' && editor) {
+      editor.hidden = false;
     }
 
-    document.querySelectorAll('[data-page]').forEach(section => {
-      section.hidden = section.dataset.page !== page;
-    });
+    document.querySelectorAll('.studio-screen[data-page]')
+      .forEach(section => {
+        const active = section.dataset.page === page;
+        section.hidden = !active;
+        section.style.display = active ? '' : 'none';
+      });
 
-    document.querySelectorAll('[data-screen]').forEach(button => {
-      const selected = button.dataset.screen === page;
+    document.querySelectorAll('[data-screen]')
+      .forEach(button => {
+        const active = button.dataset.screen === page;
+        button.classList.toggle('active', active);
 
-      button.classList.toggle('active', selected);
+        if (active) {
+          button.setAttribute('aria-current', 'page');
+        } else {
+          button.removeAttribute('aria-current');
+        }
+      });
 
-      button.setAttribute(
-        'aria-current',
-        selected ? 'page' : 'false'
-      );
-    });
-
-    if (updateHash && location.hash !== '#' + page) {
+    if (location.hash !== '#' + page) {
       history.replaceState(null, '', '#' + page);
     }
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'auto'
-    });
+    window.scrollTo(0, 0);
   }
 
   function setup() {
-    // Navigation buttons
-    document
-      .querySelectorAll('[data-screen], [data-go]')
-      .forEach(button => {
-        button.addEventListener('click', () => {
-          navigate(
-            button.dataset.screen || button.dataset.go
-          );
-        });
-      });
+    // Main navigation and Next buttons
+    document.addEventListener('click', event => {
+      const navButton = event.target.closest(
+        '[data-screen], [data-go]'
+      );
 
-    // Save design using the existing restaurant save function
+      if (navButton) {
+        navigate(
+          navButton.dataset.screen || navButton.dataset.go
+        );
+        return;
+      }
+
+      // Manage buttons are created dynamically by builder.js.
+      const restaurantsBox = $('restaurants');
+      const clickedButton = event.target.closest('button');
+
+      if (
+        restaurantsBox &&
+        clickedButton &&
+        restaurantsBox.contains(clickedButton) &&
+        clickedButton.textContent.trim() === 'Manage'
+      ) {
+        // Allow the original Manage handler to select the restaurant.
+        setTimeout(() => navigate('settings'), 0);
+      }
+
+      if (clickedButton && clickedButton.id === 'newRestaurant') {
+        setTimeout(() => navigate('settings'), 0);
+      }
+    });
+
     $('saveDesignShortcut')?.addEventListener('click', () => {
       $('saveRestaurant')?.click();
     });
 
-    // Open settings when creating a restaurant
-    $('newRestaurant')?.addEventListener('click', () => {
-      navigate('settings');
-    });
-
-    // Open settings when managing a restaurant
-    $('restaurants')?.addEventListener('click', event => {
-      if (event.target.closest('button')) {
-        navigate('settings');
-      }
-    });
-
-    // Browser back / hash navigation
     window.addEventListener('hashchange', () => {
-      navigate(location.hash.slice(1), false);
+      navigate(location.hash.slice(1));
     });
 
-    // Initial screen
-    navigate(
-      location.hash.slice(1) || 'restaurants',
-      false
-    );
+    navigate(location.hash.slice(1) || 'restaurants');
   }
 
   if (document.readyState === 'loading') {
@@ -89,4 +97,6 @@ here
   } else {
     setup();
   }
+
+  window.pfNavigate = navigate;
 })();
