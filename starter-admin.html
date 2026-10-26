@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Starter | Admin Subscriptions</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#192033;background:#f5f6fb}*{box-sizing:border-box}body{margin:0}.wrap{max-width:760px;margin:40px auto;padding:16px}.panel{background:white;border:1px solid #e2e4ed;border-radius:16px;padding:24px;box-shadow:0 4px 18px #14203b0a}h1{margin:0 0 10px}p{line-height:1.5;color:#536078}label{display:block;margin:18px 0 6px;font-weight:600}input{width:100%;padding:13px;border:1px solid #b9c0d0;border-radius:10px;font:inherit}button{padding:12px 18px;border:0;border-radius:10px;background:#6344df;color:white;font:inherit;cursor:pointer;margin:12px 8px 0 0}button.secondary{background:#48546a}button:disabled{opacity:.5;cursor:wait}#status{white-space:pre-wrap}code{overflow-wrap:anywhere}#adminPanel[hidden]{display:none}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script defer src="config.js?v=1"></script>
+</head><body><main class="wrap"><section class="panel"><h1>Starter Admin</h1><p id="status" role="status">Checking your admin account...</p>
+<div id="adminPanel" hidden><p>Grant exactly 60 seconds of access from the current database time. Regranting restarts the minute.</p>
+<label for="targetUser">Target user's Supabase Auth UID</label><input id="targetUser" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" spellcheck="false" autocomplete="off">
+<button id="grant" type="button">Grant 1 minute</button><button id="revoke" type="button" class="secondary">Revoke access</button>
+<p id="result" role="status"></p></div></section></main>
+<script>
+window.addEventListener('DOMContentLoaded', async () => {
+ const status=document.getElementById('status'),panel=document.getElementById('adminPanel'),result=document.getElementById('result');
+ const db=window.pfDb;
+ if(!db){status.textContent='Supabase client not found. Check config.js and window.pfDb.';return;}
+ const {data:{user},error:authError}=await db.auth.getUser();
+ if(authError||!user){status.textContent='Sign in to Starter before opening this page.';return;}
+ const {data:admin,error}=await db.rpc('starter_is_admin');
+ if(error||!admin){status.textContent='Access denied. This page is restricted to the Starter admin account.';return;}
+ status.textContent='Authorized admin: '+user.email;panel.hidden=false;
+ async function act(name){
+  const target=document.getElementById('targetUser').value.trim();
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target)){result.textContent='Enter a valid Supabase Auth user UUID.';return;}
+  const buttons=[document.getElementById('grant'),document.getElementById('revoke')];buttons.forEach(b=>b.disabled=true);
+  result.textContent='Saving...';
+  try{const {data,error}=await db.rpc(name,{target_user:target});if(error)throw error;
+   result.textContent=name==='starter_grant_minute'?'Access granted until '+new Date(data).toLocaleString()+' (database timestamp).':'Access revoked.';
+  }catch(e){result.textContent='Error: '+e.message;}finally{buttons.forEach(b=>b.disabled=false);}
+ }
+ document.getElementById('grant').onclick=()=>act('starter_grant_minute');
+ document.getElementById('revoke').onclick=()=>act('starter_revoke');
+});
+</script></body></html>
