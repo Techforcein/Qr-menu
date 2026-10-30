@@ -1,130 +1,68 @@
-
-/* PageForge Restaurant Studio - Navigation V5 */
+/* Starter Restaurant Studio navigation - gated workflow */
 (() => {
   'use strict';
-
-  const PAGES = [
-    'restaurants',
-    'settings',
-    'design',
-    'categories',
-    'products',
-    'qr'
-  ];
-
+  const PAGES = ['restaurants','settings','design','categories','products','qr'];
   const $ = id => document.getElementById(id);
-
-  let currentPage = 'restaurants';
-
-  function navigate(page, updateHash = true) {
-    if (!PAGES.includes(page)) page = 'restaurants';
-
-    const studio = $('studio');
-    const editor = $('editor');
-
-    if (!studio) return;
-
-    currentPage = page;
-
-    // Keep editor visible when showing its screens.
-    // Individual screens are hidden separately.
-    if (editor) {
-      editor.hidden = page === 'restaurants';
-      editor.style.display =
-        page === 'restaurants' ? 'none' : 'block';
-    }
-
-    document.querySelectorAll(
-      '.studio-screen[data-page]'
-    ).forEach(section => {
-      const active = section.dataset.page === page;
-
-      section.hidden = !active;
-      section.style.display = active ? 'block' : 'none';
+  let current = 'restaurants';
+  let ready = false;
+  const status = { settings:false, design:false, categories:false, products:false };
+  const order = ['settings','design','categories','products','qr'];
+  const gates = { design:'settings', categories:'design', products:'categories', qr:'products' };
+  function refresh() {
+    document.querySelectorAll('[data-go]').forEach(b => {
+      const gate = gates[b.dataset.go];
+      b.disabled = !!gate && !status[gate];
+      b.title = b.disabled ? 'Complete and save this step first' : '';
     });
-
-    document.querySelectorAll(
-      '.studio-nav [data-screen]'
-    ).forEach(button => {
-      const active = button.dataset.screen === page;
-
-      button.classList.toggle('active', active);
-
-      if (active) {
-        button.setAttribute('aria-current', 'page');
-      } else {
-        button.removeAttribute('aria-current');
-      }
+    document.querySelectorAll('.studio-nav [data-screen]').forEach(b => {
+      const page = b.dataset.screen;
+      const gate = gates[page];
+      b.disabled = !!gate && !status[gate];
+      b.classList.toggle('active',page === current);
+      if (page === current) b.setAttribute('aria-current','page');
+      else b.removeAttribute('aria-current');
     });
-
-    if (updateHash) {
-      history.replaceState(null, '', '#' + page);
-    }
-
-    window.scrollTo(0, 0);
   }
-
-  // Make navigation accessible to restaurant-builder.js
-  window.pfNavigate = navigate;
-
+  function navigate(page, updateHash=true) {
+    if (!PAGES.includes(page)) page='restaurants';
+    if (!ready && page !== 'restaurants') page='restaurants';
+    if (page !== 'restaurants' && page !== 'settings') {
+      const idx=order.indexOf(page);
+      for (let i=1;i<=idx;i++) {
+        if (!status[order[i-1]]) { page=order[i-1]; break; }
+      }
+    }
+    current=page;
+    const editor=$('editor');
+    if (editor) { editor.hidden=page==='restaurants'; editor.style.display=page==='restaurants'?'none':'block'; }
+    document.querySelectorAll('.studio-screen[data-page]').forEach(s => {
+      const show=s.dataset.page===page;
+      s.hidden=!show; s.style.display=show?'block':'none';
+    });
+    refresh();
+    if (updateHash) history.replaceState(null,'','#'+page);
+    window.scrollTo(0,0);
+  }
+  window.pfNavigate=navigate;
+  window.pfStudio={
+    setReady(v){ ready=!!v; if (!ready) this.reset(); else refresh(); },
+    setStep(step,v){ if (Object.prototype.hasOwnProperty.call(status,step)) { status[step]=!!v; refresh(); } },
+    getStep(step){ return !!status[step]; },
+    reset(){ Object.keys(status).forEach(k=>status[k]=false); refresh(); },
+    go: navigate
+  };
   function setup() {
-    // Use one delegated click listener for all navigation.
-    document.addEventListener('click', event => {
-      const button = event.target.closest('button');
-
-      if (!button) return;
-
-      const targetPage =
-        button.dataset.screen || button.dataset.go;
-
-      if (targetPage) {
-        navigate(targetPage);
-        return;
-      }
-
-      // Existing Manage buttons are generated dynamically.
-      const list = $('restaurants');
-
-      if (
-        list &&
-        list.contains(button) &&
-        button.textContent.trim() === 'Manage'
-      ) {
-        // The existing button handler selects the restaurant.
-        // Navigate after the click handler has started.
-        navigate('settings');
-        return;
-      }
-
-      if (button.id === 'newRestaurant') {
-        navigate('settings');
-      }
+    document.addEventListener('click',e=>{
+      const b=e.target.closest('button');
+      if (!b || b.disabled) return;
+      const target=b.dataset.screen||b.dataset.go;
+      if (target) { e.preventDefault(); navigate(target); return; }
+      if (b.id==='newRestaurant') navigate('settings');
     });
-
-    // Reuse the original save handler.
-    $('saveDesignShortcut')?.addEventListener(
-      'click',
-      () => $('saveRestaurant')?.click()
-    );
-
-    // Support navigation using browser history.
-    window.addEventListener('hashchange', () => {
-      navigate(location.hash.substring(1), false);
-    });
-
-    // Start on restaurant list, unless a valid screen
-    // was requested in the URL.
-    const requested = location.hash.substring(1);
-
-    navigate(
-      PAGES.includes(requested) ? requested : 'restaurants',
-      false
-    );
+    $('saveDesignShortcut')?.addEventListener('click',()=> $('saveRestaurant')?.click());
+    window.addEventListener('hashchange',()=>navigate(location.hash.slice(1),false));
+    navigate('restaurants',false);
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setup);
-  } else {
-    setup();
-  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',setup);
+  else setup();
 })();
