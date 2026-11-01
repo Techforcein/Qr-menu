@@ -1,23 +1,71 @@
-[
-  {
-    "date": "2026-11-01",
-    "tag": "WELCOME",
-    "title": "Welcome to Discover",
-    "description": "Find the latest PageForge updates, new tools, ideas and announcements here. This feed is updated by the PageForge owner.",
-    "link": "./opensrc.html",
-    "linkText": "Explore open source"
-  }
-]
 {
+  "siteName": "PageForge Discover",
+  "updatedAt": "2026-11-01",
   "posts": [
     {
+      "id": "starter-studio",
       "date": "2026-11-01",
-      "tag": "NEW FEATURE",
-      "title": "Restaurant Studio updated",
-      "description": "Create beautiful digital restaurant menus.",
+      "tag": "PRODUCT UPDATE",
+      "category": "Updates",
+      "title": "Meet the new Starter experience",
+      "description": "A cleaner workspace for building websites and restaurant menus, with your creative tools one tap away.",
       "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0uzjylRU4i2UXyIin1SYo3s9GYjZDS7zRTJY2rb7Ppw&s=10",
+      "link": "./",
+      "linkText": "Open workspace",
+      "featured": true,
+      "pinned": true
+    },
+    {
+      "id": "restaurant-studio",
+      "date": "2026-10-30",
+      "tag": "BUILDER SPOTLIGHT",
+      "category": "Spotlight",
+      "title": "Build a digital menu in minutes",
+      "description": "Create a mobile-friendly restaurant menu with categories, food photos, prices, discounts and WhatsApp ordering.",
+      "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&auto=format&fit=crop",
       "link": "./restaurant-builder.html",
-      "linkText": "Explore now"
+      "linkText": "Explore Restaurant Studio",
+      "featured": false,
+      "pinned": false
+    },
+    {
+      "id": "open-source",
+      "date": "2026-10-28",
+      "tag": "COMMUNITY",
+      "category": "Resources",
+      "title": "Discover open-source tools",
+      "description": "Explore useful projects, developer resources and tools selected for creators and builders.",
+      "image": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop",
+      "link": "./opensrc.html",
+      "linkText": "Browse resources",
+      "featured": false,
+      "pinned": false
+    },
+    {
+      "id": "publish-share",
+      "date": "2026-10-25",
+      "tag": "QUICK TIP",
+      "category": "Tips",
+      "title": "Publish once. Share everywhere.",
+      "description": "Use your public page link and downloadable QR code to make your work easy to open and share.",
+      "image": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&auto=format&fit=crop",
+      "link": "./",
+      "linkText": "Start creating",
+      "featured": false,
+      "pinned": false
+    },
+    {
+      "id": "creator-workflow",
+      "date": "2026-10-22",
+      "tag": "IDEA",
+      "category": "Ideas",
+      "title": "Turn a small idea into a live project",
+      "description": "Start with one useful page, test it with real people, then improve it from feedback.",
+      "image": "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=1200&auto=format&fit=crop",
+      "link": "./",
+      "linkText": "Build your idea",
+      "featured": false,
+      "pinned": false
     }
   ]
 }

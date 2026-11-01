@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f6f5fb">
+  <meta name="description" content="Discover PageForge updates, tools, ideas and creator resources.">
+  <title>Discover | PageForge</title>
+  <link rel="stylesheet" href="./discover.css?v=10">
+  <script defer src="./discover.js?v=10"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./"><span class="brand-mark">✳</span> PageForge</a>
+    <nav><a class="back-link" href="./">← Workspace</a></nav>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <div class="intro-copy">
+        <div class="eyebrow"><span class="live-dot"></span> THE CREATOR BULLETIN</div>
+        <h1>Discover <span>what’s new.</span></h1>
+        <p>Product updates, useful tools, ideas and inspiration — all in one place.</p>
+      </div>
+      <div class="intro-stamp" aria-hidden="true"><span>PF</span><small>IDEAS<br>IN MOTION</small></div>
+    </section>
+
+    <section class="toolbar" aria-label="Discover controls">
+      <label class="searchbox"><span>⌕</span><input id="searchInput" type="search" placeholder="Search updates, tools and ideas…" autocomplete="off"></label>
+      <div class="filters" id="filters">
+        <button class="filter active" data-category="All">All</button>
+        <button class="filter" data-category="Updates">Updates</button>
+        <button class="filter" data-category="Spotlight">Spotlight</button>
+        <button class="filter" data-category="Resources">Resources</button>
+        <button class="filter" data-category="Tips">Tips</button>
+        <button class="filter" data-category="Ideas">Ideas</button>
+      </div>
+    </section>
+
+    <section id="featuredArea" class="featured-area" aria-label="Featured story"></section>
+
+    <section class="feed-heading">
+      <div><div class="eyebrow">FRESH FROM THE WORKSPACE</div><h2>Latest discoveries</h2></div>
+      <span id="resultCount" class="result-count"></span>
+    </section>
+    <section id="feedGrid" class="feed-grid" aria-live="polite"></section>
+    <div id="emptyState" class="empty-state" hidden>
+      <div class="empty-icon">⌕</div><h3>No discoveries found</h3><p>Try another search or choose a different category.</p>
+      <button id="clearFilters" class="secondary-button">Clear filters</button>
+    </div>
+    <footer class="footer"><span>✳ PAGEFORGE DISCOVER</span><span>Built for curious creators.</span></footer>
+  </main>
+</body>
+</html>
