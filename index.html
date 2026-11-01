@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f7f8fc"><meta name="description" content="Build websites and restaurant QR menus with PageForge.">
-<title>PageForge | Website & Restaurant Studio</title>
-<link rel="stylesheet" href="./style.css?v=7">
+<title>PageForge | Your Workspace</title>
+<link rel="stylesheet" href="./style.css?v=8">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script defer src="./script.js?v=6"></script>
@@ -12,7 +12,20 @@
 </head>
 <body>
 <div id="libraryError" role="alert" hidden></div>
-<header class="site-header"><a class="brand" href="./"><span class="brand-mark">◆</span> PageForge</a><div id="account"><button id="logout" class="button button-light button-small" type="button" hidden>Log out</button></div></header>
+<header class="site-header">
+  <a class="brand" href="./"><span class="brand-mark">◆</span> PageForge</a>
+  <div class="header-actions" id="account">
+    <div class="add-menu-wrap" id="addMenuWrap" hidden>
+      <button id="addMenuButton" class="add-menu-button" type="button" aria-label="Open create menu" aria-expanded="false">＋</button>
+      <div id="addMenu" class="add-menu" hidden>
+        <a href="./opensrc.html"><span class="menu-icon opensrc-icon">🔗</span><span><b>Opensource</b><small>Explore open-source tools</small></span><span class="menu-arrow">↗</span></a>
+        <button id="menuWebsiteBuilder" type="button"><span class="menu-icon website-menu-icon">⌘</span><span><b>Website Builder</b><small>Create and publish a website</small></span><span class="menu-arrow">→</span></button>
+        <a href="./restaurant-builder.html"><span class="menu-icon restaurant-menu-icon">♨</span><span><b>Restaurant Studio</b><small>Build a digital QR menu</small></span><span class="menu-arrow">↗</span></a>
+      </div>
+    </div>
+    <button id="logout" class="button button-light button-small" type="button" hidden>Log out</button>
+  </div>
+</header>
 <main id="builder">
 <section class="intro"><p class="eyebrow">✦ PAGEFORGE STUDIO</p><h1>Build something <span>remarkable.</span></h1><p class="intro-copy">One simple workspace for your websites, digital menus and business ideas.</p></section>
 <section id="auth" class="auth-shell">
@@ -24,14 +37,16 @@
  <p id="authStatus" class="auth-status" role="status" aria-live="polite"></p><button id="resendConfirmation" type="button" class="resend-button" hidden>↻ Resend confirmation email</button>
  <p class="auth-footnote">If email confirmation is enabled, check your inbox after creating an account. Open the newest confirmation link to activate your account.</p><div class="auth-trust">⌁ Secure account access <span>·</span> Made for creators</div></div>
 </section>
-<section id="studioDashboard" class="pf-dashboard" hidden><div class="section-heading"><div><p class="eyebrow">YOUR WORKSPACE</p><h2>My Studio</h2><p>Choose what you want to create.</p></div><span class="workspace-pill">● Workspace ready</span></div>
-<div class="pf-studio-grid"><article class="pf-studio-card"><div class="studio-icon website-icon">⌘</div><span class="card-overline">BUILD & PUBLISH</span><h3>Website Builder</h3><p>Create and publish custom websites, upload images, customize colors and generate shareable QR codes.</p><button id="openWebsiteBuilder" class="button button-primary pf-studio-action" type="button">Create website <span>→</span></button></article>
-<article class="pf-studio-card restaurant"><div class="studio-icon restaurant-icon">♨</div><span class="card-overline">MENUS & ORDERS</span><h3>Restaurant Studio</h3><p>Create digital restaurant menus with food categories, discounts, mobile templates and WhatsApp ordering.</p><a class="button button-green pf-studio-action" href="./restaurant-builder.html">Create QR menu <span>→</span></a></article></div>
-<div class="pf-dashboard-note"><b>✦</b><div><strong>All your projects, in one place</strong><p>Your existing websites are available inside Website Builder. Restaurant menus can be managed in Restaurant Studio.</p></div></div></section>
+<section id="studioDashboard" class="pf-dashboard" hidden>
+ <div class="section-heading"><div><p class="eyebrow">YOUR WORKSPACE</p><h2>My Studio</h2><p>Your creative workspace, all in one place.</p></div><span class="workspace-pill">● Workspace ready</span></div>
+ <section class="discover-section" aria-labelledby="discoverTitle">
+  <div class="discover-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2 id="discoverTitle">Discover</h2><p>Updates, ideas and announcements from PageForge.</p></div><span class="discover-live"><i></i> LATEST UPDATES</span></div>
+  <div id="discoverFeed" class="discover-feed" aria-live="polite"><article class="discover-empty">Loading Discover feed…</article></div>
+ </section>
+</section>
 <div id="editor" class="layout" hidden>
 <section class="panel editor-panel"><div class="pf-editor-toolbar"><div><p class="eyebrow">WEBSITE BUILDER</p><h2>Customize your page</h2></div><button id="backToDashboard" class="button button-light" type="button">← Dashboard</button></div>
-<div class="fields"><label>Page title<input id="title" type="text" maxlength="100" value="Welcome to my page"></label><label>Subtitle<input id="subtitle" type="text" maxlength="160" value="Everything you need, in one place"></label><label>Description<textarea id="description" maxlength="3000" rows="5">A beautiful page made with PageForge.</textarea></label><label>Button text<input id="buttonText" type="text" maxlength="50" value="Contact us"></label><label>Button URL<input id="buttonUrl" type="url" placeholder="https://example.com"></label><label>Cover image <small>JPG, PNG, WEBP · max 5 MB</small><input id="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
-<div class="colors"><label>Background<input id="background" type="color" value="#0b1020"></label><label>Accent<input id="accent" type="color" value="#8b5cf6"></label><label>Text<input id="textColor" type="color" value="#ffffff"></label></div></div>
+<div class="fields"><label>Page title<input id="title" type="text" maxlength="100" value="Welcome to my page"></label><label>Subtitle<input id="subtitle" type="text" maxlength="160" value="Everything you need, in one place"></label><label>Description<textarea id="description" maxlength="3000" rows="5">A beautiful page made with PageForge.</textarea></label><label>Button text<input id="buttonText" type="text" maxlength="50" value="Contact us"></label><label>Button URL<input id="buttonUrl" type="url" placeholder="https://example.com"></label><label>Cover image <small>JPG, PNG, WEBP · max 5 MB</small><input id="image" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="colors"><label>Background<input id="background" type="color" value="#0b1020"></label><label>Accent<input id="accent" type="color" value="#8b5cf6"></label><label>Text<input id="textColor" type="color" value="#ffffff"></label></div></div>
 <div class="actions"><button id="publish" class="button button-primary" type="button">Publish page →</button><button id="reset" class="button button-light" type="button">New page</button></div><p id="status" class="status-line" role="status" aria-live="polite"></p></section>
 <section class="editor-side"><div class="panel previewWrap"><div class="panel-heading"><div><p class="eyebrow">IN REAL TIME</p><h2>Live preview</h2></div><span class="preview-dot">● LIVE</span></div><div id="preview"></div></div>
 <div id="result" class="panel" hidden><h2>Your page is live!</h2><p class="muted">Copy the URL or share the QR code.</p><input id="shareUrl" type="text" readonly aria-label="Published page URL"><div class="actions"><button id="copy" class="button button-primary" type="button">Copy URL</button><a id="openPage" target="_blank" rel="noopener noreferrer" class="button button-light">Open page</a></div><canvas id="qr" width="220" height="220"></canvas><a id="downloadQR" class="button button-light download-qr" download="pageforge-qr.png">Download QR</a></div>
@@ -39,18 +54,44 @@
 <main id="publicPage" hidden><div id="publishedContent">Loading webpage...</div><p class="footer"><a href="./">Create your own page with PageForge</a></p></main>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
- const $=id=>document.getElementById(id), pass=$('password'), resend=$('resendConfirmation');
+ const $=id=>document.getElementById(id),pass=$('password'),resend=$('resendConfirmation');
  function mode(signup){$('signin').hidden=signup;$('signup').hidden=!signup;$('showSignin').classList.toggle('active',!signup);$('showSignup').classList.toggle('active',signup);$('showSignin').setAttribute('aria-selected',String(!signup));$('showSignup').setAttribute('aria-selected',String(signup));$('authTitle').textContent=signup?'Create your account.':'Welcome back.';$('authSubtitle').textContent=signup?'Start building your next idea today.':'Sign in to continue to your workspace.';pass.autocomplete=signup?'new-password':'current-password';$('authStatus').textContent='';resend.hidden=true;}
  $('showSignin').addEventListener('click',()=>mode(false));$('showSignup').addEventListener('click',()=>mode(true));
  $('togglePassword').addEventListener('click',function(){const show=pass.type==='password';pass.type=show?'text':'password';this.textContent=show?'Hide':'Show';this.setAttribute('aria-label',show?'Hide password':'Show password');});mode(false);
 });
 window.addEventListener('DOMContentLoaded',function(){
- const $=id=>document.getElementById(id),dash=$('studioDashboard'),editor=$('editor'),logout=$('logout');
+ const $=id=>document.getElementById(id),dash=$('studioDashboard'),editor=$('editor'),logout=$('logout'),addWrap=$('addMenuWrap'),addButton=$('addMenuButton'),menu=$('addMenu');
  if(new URLSearchParams(location.search).has('page'))return;let view='dashboard';
- function update(){if(logout.hidden){dash.hidden=true;return;}dash.hidden=view!=='dashboard';editor.hidden=view!=='editor';}
- $('openWebsiteBuilder').addEventListener('click',()=>{view='editor';update();scrollTo({top:0,behavior:'smooth'});});
- $('backToDashboard').addEventListener('click',()=>{view='dashboard';update();scrollTo({top:0,behavior:'smooth'});});
+ function update(){const loggedIn=!logout.hidden;addWrap.hidden=!loggedIn;if(!loggedIn){dash.hidden=true;editor.hidden=true;menu.hidden=true;addButton.setAttribute('aria-expanded','false');return;}dash.hidden=view!=='dashboard';editor.hidden=view!=='editor';}
+ function closeMenu(){menu.hidden=true;addButton.setAttribute('aria-expanded','false');}
+ addButton.addEventListener('click',function(){menu.hidden=!menu.hidden;addButton.setAttribute('aria-expanded',String(!menu.hidden));});
+ $('menuWebsiteBuilder').addEventListener('click',function(){view='editor';closeMenu();update();scrollTo({top:0,behavior:'smooth'});});
+ $('backToDashboard').addEventListener('click',function(){view='dashboard';update();scrollTo({top:0,behavior:'smooth'});});
+ document.addEventListener('click',function(event){if(!addWrap.contains(event.target))closeMenu();});
+ document.addEventListener('keydown',function(event){if(event.key==='Escape')closeMenu();});
  new MutationObserver(update).observe(logout,{attributes:true,attributeFilter:['hidden']});update();
 });
+async function loadDiscoverFeed(){
+ const target=document.getElementById('discoverFeed');if(!target)return;
+ try{
+  const response=await fetch('./discover.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('Feed file not found');
+  const posts=await response.json();if(!Array.isArray(posts))throw new Error('Feed format is invalid');
+  target.replaceChildren();
+  if(!posts.length){target.innerHTML='<article class="discover-empty">No updates yet. Check back soon.</article>';return;}
+  posts.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(post=>{
+   const card=document.createElement('article');card.className='discover-card';
+   const meta=document.createElement('div');meta.className='discover-meta';
+   const tag=document.createElement('span');tag.className='discover-tag';tag.textContent=String(post.tag||'UPDATE');
+   const date=document.createElement('time');date.textContent=String(post.date||'');if(post.date)date.dateTime=post.date;
+   meta.append(tag,date);
+   const title=document.createElement('h3');title.textContent=String(post.title||'Untitled update');
+   const desc=document.createElement('p');desc.textContent=String(post.description||'');
+   card.append(meta,title,desc);
+   if(post.link&&/^https?:\/\//i.test(post.link)||post.link&&post.link.startsWith('./')){const link=document.createElement('a');link.className='discover-link';link.href=post.link;link.textContent=String(post.linkText||'Explore more');if(/^https?:\/\//i.test(post.link)){link.target='_blank';link.rel='noopener noreferrer';}card.append(link);}
+   target.append(card);
+  });
+ }catch(error){target.innerHTML='<article class="discover-empty">Discover feed is temporarily unavailable. Please check back later.</article>';console.warn('Discover feed:',error);}
+}
+window.addEventListener('DOMContentLoaded',loadDiscoverFeed);
 window.addEventListener('load',function(){const e=document.getElementById('libraryError');if(!window.supabase||typeof window.supabase.createClient!=='function'){e.hidden=false;e.textContent='Supabase library failed to load. Check your internet connection.';}if(!window.QRCode)console.warn('QR library failed to load.');});
 </script></body></html>
