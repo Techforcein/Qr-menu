@@ -44,6 +44,141 @@
   <div id="discoverFeed" class="discover-feed" aria-live="polite"><article class="discover-empty">Loading Discover feed…</article></div>
  </section>
 </section>
+<!-- PAGEFORGE DISCOVER CARD -->
+<style>
+  .discover-mini {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 680px;
+    margin: 24px 0;
+    padding: 14px;
+    box-sizing: border-box;
+    background: linear-gradient(120deg, #fff, #f5f1ff);
+    border: 1px solid #e8e2f8;
+    border-radius: 18px;
+    box-shadow: 0 8px 28px rgba(75,55,130,.07);
+    transition: .25s ease;
+  }
+
+  .discover-mini:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 13px 32px rgba(75,55,130,.12);
+  }
+
+  .discover-mini-image {
+    width: 105px;
+    height: 105px;
+    flex: 0 0 105px;
+    overflow: hidden;
+    border-radius: 13px;
+    background: #eeeaf8;
+  }
+
+  .discover-mini-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  .discover-mini-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .discover-label {
+    color: #8060d8;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+  }
+
+  .discover-mini-content h3 {
+    margin: 5px 0;
+    color: #242238;
+    font-size: 21px;
+    font-weight: 800;
+  }
+
+  .discover-mini-content p {
+    margin: 0 0 11px;
+    color: #777487;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .discover-mini-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 14px;
+    border-radius: 9px;
+    background: linear-gradient(135deg,#8565e9,#6847ca);
+    color: #fff !important;
+    text-decoration: none !important;
+    font-size: 11px;
+    font-weight: 750;
+    transition: .2s ease;
+  }
+
+  .discover-mini-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(105,72,202,.25);
+  }
+
+  @media(max-width:500px) {
+    .discover-mini {
+      gap: 11px;
+      padding: 11px;
+      border-radius: 15px;
+    }
+
+    .discover-mini-image {
+      width: 85px;
+      height: 95px;
+      flex-basis: 85px;
+    }
+
+    .discover-mini-content h3 {
+      font-size: 18px;
+    }
+
+    .discover-mini-content p {
+      font-size: 11px;
+    }
+
+    .discover-mini-button {
+      padding: 8px 11px;
+      font-size: 10px;
+    }
+  }
+</style>
+
+<section class="discover-mini">
+  <div class="discover-mini-image">
+    <img
+      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqiMddMZ0g7ch9Ct_QDxZMxhkfnveIw7fPdD264gxa3Q&s=10"
+      alt="Discover"
+      loading="lazy"
+    >
+  </div>
+
+  <div class="discover-mini-content">
+    <span class="discover-label">EXPLORE & LEARN</span>
+    <h3>Discover</h3>
+
+    <p>
+      Explore creative ideas, useful resources and updates.
+      Learn how to host websites and publish your web pages online.
+    </p>
+
+    <a href="./discover.html" class="discover-mini-button">
+      Explore Discover ↗
+    </a>
+  </div>
+</section>
+
 <div id="editor" class="layout" hidden>
 <section class="panel editor-panel"><div class="pf-editor-toolbar"><div><p class="eyebrow">WEBSITE BUILDER</p><h2>Customize your page</h2></div><button id="backToDashboard" class="button button-light" type="button">← Dashboard</button></div>
 <div class="fields"><label>Page title<input id="title" type="text" maxlength="100" value="Welcome to my page"></label><label>Subtitle<input id="subtitle" type="text" maxlength="160" value="Everything you need, in one place"></label><label>Description<textarea id="description" maxlength="3000" rows="5">A beautiful page made with PageForge.</textarea></label><label>Button text<input id="buttonText" type="text" maxlength="50" value="Contact us"></label><label>Button URL<input id="buttonUrl" type="url" placeholder="https://example.com"></label><label>Cover image <small>JPG, PNG, WEBP · max 5 MB</small><input id="image" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="colors"><label>Background<input id="background" type="color" value="#0b1020"></label><label>Accent<input id="accent" type="color" value="#8b5cf6"></label><label>Text<input id="textColor" type="color" value="#ffffff"></label></div></div>
