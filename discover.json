@@ -8,3 +8,16 @@
     "linkText": "Explore open source"
   }
 ]
+{
+  "posts": [
+    {
+      "date": "2026-11-01",
+      "tag": "NEW FEATURE",
+      "title": "Restaurant Studio updated",
+      "description": "Create beautiful digital restaurant menus.",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0uzjylRU4i2UXyIin1SYo3s9GYjZDS7zRTJY2rb7Ppw&s=10",
+      "link": "./restaurant-builder.html",
+      "linkText": "Explore now"
+    }
+  ]
+}
