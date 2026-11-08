@@ -1,1 +1,29 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Contact Form | PageForge</title><link rel="stylesheet" href="contact-studio.css?v=1"><script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script defer src="config.js?v=1"></script><script defer src="contact-public.js?v=1"></script></head><body><header class="topbar"><a class="brand" href="./">◆ PageForge</a><span>Contact form</span></header><main class="shell"><div id="publicStatus" class="notice">Loading form…</div><form id="publicForm" class="public-preview" hidden><h1 id="publicTitle"></h1><p id="publicDescription"></p><div id="publicFields"></div><button type="submit">Submit response →</button></form></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#6557d8">
+  <title>Contact form | Starter</title>
+  <link rel="stylesheet" href="contact-studio.css?v=2">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script defer src="config.js?v=1"></script>
+  <script defer src="contact-public.js?v=2"></script>
+</head>
+<body class="public-page">
+  <header class="topbar">
+    <a class="brand" href="./">✦ Starter</a>
+    <span>Contact form</span>
+  </header>
+  <main class="shell public-shell">
+    <div id="publicStatus" class="notice" role="status" aria-live="polite">Loading form…</div>
+    <form id="publicForm" class="public-preview" hidden novalidate>
+      <div id="publicProgress" class="public-progress" hidden><span id="publicProgressText"></span><div class="public-progress-track"><span id="publicProgressBar"></span></div></div>
+      <h1 id="publicTitle"></h1>
+      <p id="publicDescription"></p>
+      <div id="publicFields"></div>
+      <div class="public-submit-row"><button type="submit" id="publicSubmit">Submit response <span aria-hidden="true">→</span></button><small>Your response will be sent securely.</small></div>
+    </form>
+  </main>
+</body>
+</html>
