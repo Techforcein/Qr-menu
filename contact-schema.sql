@@ -88,3 +88,18 @@ grant select on public.contact_forms to anon, authenticated;
 grant insert, update, delete on public.contact_forms to authenticated;
 grant insert on public.contact_form_submissions to anon, authenticated;
 grant select, delete on public.contact_form_submissions to authenticated;
+
+-- Upgrade existing installations safely (all statements are repeatable).
+alter table public.contact_forms add column if not exists google_script_url text;
+alter table public.contact_forms add column if not exists google_sheet_url text;
+alter table public.contact_form_submissions add column if not exists read_at timestamptz;
+alter table public.contact_form_submissions add column if not exists starred boolean not null default false;
+alter table public.contact_form_submissions add column if not exists archived boolean not null default false;
+
+drop policy if exists "owners update their form submissions" on public.contact_form_submissions;
+create policy "owners update their form submissions"
+on public.contact_form_submissions for update to authenticated
+using (exists (select 1 from public.contact_forms f where f.id=form_id and f.owner_id=(select auth.uid())))
+with check (exists (select 1 from public.contact_forms f where f.id=form_id and f.owner_id=(select auth.uid())));
+
+grant update on public.contact_form_submissions to authenticated;
