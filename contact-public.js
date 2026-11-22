@@ -15,7 +15,7 @@
   }[c]));
 
   // ------------------------------------------
-  // Visitor ID: anonymous, stored on this device
+  // Anonymous visitor ID
   // ------------------------------------------
   function getVisitorId() {
     const key = 'pf_contact_visitor_id';
@@ -95,42 +95,18 @@
     if (/Safari\//i.test(ua) && !/Chrome/i.test(ua))
       return 'Safari';
 
-    if (/MSIE|Trident/i.test(ua)) return 'Internet Explorer';
+    if (/MSIE|Trident/i.test(ua))
+      return 'Internet Explorer';
 
     return 'Unknown';
   }
 
   // ------------------------------------------
-  // Country lookup
-  // Country only is saved in our database.
-  // ------------------------------------------
-  async function detectCountry() {
-    try {
-      const response = await fetch(
-        'https://ipapi.co/json/',
-        { cache: 'no-store' }
-      );
-
-      if (!response.ok) return {};
-
-      const data = await response.json();
-
-      return {
-        country: data.country_name || null,
-        country_code: data.country_code || null
-      };
-    } catch (_) {
-      return {};
-    }
-  }
-
-  // ------------------------------------------
   // Record visit in Supabase
+  // No country lookup or IP API is used.
   // ------------------------------------------
   async function trackVisit() {
     try {
-      const countryInfo = await detectCountry();
-
       const { error } = await db.rpc(
         'track_contact_form_view',
         {
@@ -139,15 +115,16 @@
           p_page_url: location.href,
           p_referrer: document.referrer || null,
           p_device_type: detectDevice(),
-          p_country: countryInfo.country || null,
-          p_country_code: countryInfo.country_code || null,
           p_operating_system: detectOS(),
           p_browser: detectBrowser()
         }
       );
 
       if (error) {
-        console.warn('Analytics tracking failed:', error.message);
+        console.warn(
+          'Analytics tracking failed:',
+          error.message
+        );
       }
     } catch (error) {
       console.warn('Analytics unavailable:', error);
@@ -312,8 +289,8 @@
 
       el.onsubmit = submit;
 
-      // Track visits independently of submission.
-      // Analytics failure must never prevent the form working.
+      // Track visits independently of submissions.
+      // Analytics failure never blocks form functionality.
       trackVisit();
 
     } catch (e) {
@@ -372,7 +349,7 @@
 
       if (error) throw error;
 
-      // Preserve existing Google Sheets integration
+      // Preserve Google Sheets integration.
       if (form.google_script_url) {
         try {
           fetch(form.google_script_url, {
