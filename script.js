@@ -1,7 +1,8 @@
 
 /* ==========================================
-   PAGEFORGE - COMPLETE SCRIPT.JS V6
-   Supabase Authentication + Page Builder
+   PAGEFORGE - COMPLETE SCRIPT.JS V7
+   Supabase Authentication + Google + GitHub
+   + Page Builder
 ========================================== */
 
 // ==========================================
@@ -138,8 +139,6 @@ function clearLocalImage() {
 // ==========================================
 
 function getRedirectUrl() {
-  // Return to the same website, without
-  // an old page ID or auth error fragment.
   const url = new URL(window.location.href);
 
   url.search = '';
@@ -174,7 +173,6 @@ function handleAuthRedirectError() {
     );
   }
 
-  // Remove error from URL.
   history.replaceState(
     null,
     '',
@@ -356,7 +354,7 @@ function handleImage(event) {
 }
 
 // ==========================================
-// 10. AUTHENTICATION
+// 10. EMAIL AUTHENTICATION
 // ==========================================
 
 async function authenticate(mode) {
@@ -447,7 +445,53 @@ async function authenticate(mode) {
 }
 
 // ==========================================
-// 11. RESEND CONFIRMATION EMAIL
+// 11. GOOGLE + GITHUB OAUTH
+// ==========================================
+
+async function socialLogin(provider) {
+  if (!db) {
+    setAuthStatus('Supabase library is not loaded.');
+    return;
+  }
+
+  const googleButton = $('googleLogin');
+  const githubButton = $('githubLogin');
+
+  if (googleButton) googleButton.disabled = true;
+  if (githubButton) githubButton.disabled = true;
+
+  const providerName =
+    provider === 'google' ? 'Google' : 'GitHub';
+
+  setAuthStatus(
+    'Connecting to ' + providerName + '...'
+  );
+
+  try {
+    const { error } = await db.auth.signInWithOAuth({
+      provider: provider,
+      options: {
+        redirectTo: getRedirectUrl()
+      }
+    });
+
+    if (error) throw error;
+
+  } catch (error) {
+    setAuthStatus(
+      providerName + ' login failed: ' +
+      errorMessage(error)
+    );
+
+    if (googleButton) googleButton.disabled = false;
+    if (githubButton) githubButton.disabled = false;
+
+    console.error('OAuth error:', error);
+  }
+}
+
+// ==========================================
+// 12. RESEND CONFIRMATION EMAIL
 // ==========================================
 
 async function resendConfirmation() {
@@ -498,7 +542,7 @@ async function resendConfirmation() {
 }
 
 // ==========================================
-// 12. AUTH SESSION
+// 13. AUTH SESSION
 // ==========================================
 
 async function refreshAuth() {
@@ -545,7 +589,7 @@ async function refreshAuth() {
 }
 
 // ==========================================
-// 13. LOGOUT
+// 14. LOGOUT
 // ==========================================
 
 async function logout() {
@@ -567,7 +611,7 @@ async function logout() {
 }
 
 // ==========================================
-// 14. LOAD SAVED PAGES
+// 15. LOAD SAVED PAGES
 // ==========================================
 
 async function loadPages() {
@@ -646,7 +690,7 @@ async function loadPages() {
 }
 
 // ==========================================
-// 15. EDIT PAGE
+// 16. EDIT PAGE
 // ==========================================
 
 async function editPage(id) {
@@ -681,7 +725,7 @@ async function editPage(id) {
     };
 
     for (const key of keys) {
-      $('' + key).value =
+      $(key).value =
         data[key] || defaults[key] || '';
     }
 
@@ -704,7 +748,7 @@ async function editPage(id) {
 }
 
 // ==========================================
-// 16. DELETE PAGE
+// 17. DELETE PAGE
 // ==========================================
 
 async function deletePage(id) {
@@ -762,7 +806,7 @@ async function deletePage(id) {
 }
 
 // ==========================================
-// 17. PUBLISH / UPDATE PAGE
+// 18. PUBLISH / UPDATE PAGE
 // ==========================================
 
 async function publish() {
@@ -901,7 +945,6 @@ async function publish() {
     $('openPage').href = url;
     $('result').hidden = false;
 
-    // QR code generation
     if (
       window.QRCode &&
       typeof window.QRCode.toCanvas === 'function'
@@ -958,7 +1001,7 @@ async function publish() {
 }
 
 // ==========================================
-// 18. PUBLIC PAGE
+// 19. PUBLIC PAGE
 // ==========================================
 
 async function showPublic(id) {
@@ -995,17 +1038,19 @@ async function showPublic(id) {
 }
 
 // ==========================================
-// 19. INITIALIZE APPLICATION
+// 20. INITIALIZE APPLICATION
 // ==========================================
 
 async function init() {
   if (!db) {
     const errorBox = $('libraryError');
 
-    errorBox.hidden = false;
-    errorBox.textContent =
-      'Supabase could not load. Check your ' +
-      'internet connection and script URL.';
+    if (errorBox) {
+      errorBox.hidden = false;
+      errorBox.textContent =
+        'Supabase could not load. Check your ' +
+        'internet connection and script URL.';
+    }
 
     return;
   }
@@ -1020,27 +1065,39 @@ async function init() {
     return;
   }
 
-  // Authentication buttons
+  // Email authentication buttons.
   $('signin').onclick = () =>
     authenticate('signin');
 
   $('signup').onclick = () =>
     authenticate('signup');
 
+  // Google login.
+  if ($('googleLogin')) {
+    $('googleLogin').onclick = () =>
+      socialLogin('google');
+  }
+
+  // GitHub login.
+  if ($('githubLogin')) {
+    $('githubLogin').onclick = () =>
+      socialLogin('github');
+  }
+
+  // Email confirmation.
   $('resendConfirmation').onclick =
     resendConfirmation;
 
-  // Keep resend available for users
-  // who need another confirmation link.
   $('resendConfirmation').hidden = false;
 
+  // Logout.
   $('logout').onclick = logout;
 
-  // Editor buttons
+  // Editor buttons.
   $('publish').onclick = publish;
   $('reset').onclick = clearEditor;
 
-  // Copy public URL
+  // Copy public URL.
   $('copy').onclick = async () => {
     const url = $('shareUrl').value;
 
@@ -1057,7 +1114,7 @@ async function init() {
     }
   };
 
-  // Live preview
+  // Live preview.
   for (const key of keys) {
     $(key).addEventListener('input', preview);
   }
@@ -1067,16 +1124,16 @@ async function init() {
     handleImage
   );
 
-  // Render default preview
+  // Render default preview.
   preview();
 
-  // Show expired-link messages
+  // Show expired-link messages.
   handleAuthRedirectError();
 
-  // Restore login session
+  // Restore login session.
   await refreshAuth();
 
-  // React to authentication changes
+  // React to authentication changes.
   db.auth.onAuthStateChange(() => {
     setTimeout(() => {
       refreshAuth();
@@ -1085,7 +1142,7 @@ async function init() {
 }
 
 // ==========================================
-// 20. START PAGEFORGE
+// 21. START PAGEFORGE
 // ==========================================
 
 window.addEventListener(
