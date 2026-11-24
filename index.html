@@ -1,369 +1,1267 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f7f8fc"><meta name="description" content="Build websites and restaurant QR menus with PageForge.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f8fc">
+<meta name="description" content="Build websites and restaurant QR menus with PageForge.">
+
 <title>PageForge | Your Workspace</title>
-<link rel="stylesheet" href="./style.css?v=8">
+
+<link rel="stylesheet" href="./style.css?v=9">
+
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-<script defer src="./script.js?v=6"></script>
-<style>[hidden]{display:none!important}</style>
+<script defer src="./script.js?v=7"></script>
+
+<style>
+[hidden] {
+  display: none !important;
+}
+
+/* =====================================
+   SOCIAL LOGIN
+===================================== */
+
+.social-login {
+  display: grid;
+  gap: 11px;
+  margin-top: 22px;
+}
+
+.social-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 5px 0;
+  color: #9995a8;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.3px;
+}
+
+.social-divider::before,
+.social-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e9e7ef;
+}
+
+.social-btn {
+  width: 100%;
+  min-height: 49px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border: 1px solid #e6e4ed;
+  border-radius: 12px;
+  background: #fff;
+  color: #292638;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.social-btn:hover {
+  border-color: #bdb0ee;
+  background: #faf9ff;
+  transform: translateY(-1px);
+}
+
+.social-btn img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.social-btn:disabled {
+  opacity: .55;
+  cursor: wait;
+  transform: none;
+}
+
+/* Discover mini card */
+
+.discover-mini {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 680px;
+  margin: 24px 0;
+  padding: 14px;
+  box-sizing: border-box;
+  background: linear-gradient(120deg,#fff,#f5f1ff);
+  border: 1px solid #e8e2f8;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(75,55,130,.07);
+  transition: .25s ease;
+}
+
+.discover-mini:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 13px 32px rgba(75,55,130,.12);
+}
+
+.discover-mini-image {
+  width: 105px;
+  height: 105px;
+  flex: 0 0 105px;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #eeeaf8;
+}
+
+.discover-mini-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.discover-mini-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.discover-label {
+  color: #8060d8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.discover-mini-content h3 {
+  margin: 5px 0;
+  color: #242238;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.discover-mini-content p {
+  margin: 0 0 11px;
+  color: #777487;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.discover-mini-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 14px;
+  border-radius: 9px;
+  background: linear-gradient(135deg,#8565e9,#6847ca);
+  color: #fff !important;
+  text-decoration: none !important;
+  font-size: 11px;
+  font-weight: 750;
+  transition: .2s ease;
+}
+
+.discover-mini-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(105,72,202,.25);
+}
+
+@media(max-width:500px) {
+  .discover-mini {
+    gap: 11px;
+    padding: 11px;
+    border-radius: 15px;
+  }
+
+  .discover-mini-image {
+    width: 85px;
+    height: 95px;
+    flex-basis: 85px;
+  }
+
+  .discover-mini-content h3 {
+    font-size: 18px;
+  }
+
+  .discover-mini-content p {
+    font-size: 11px;
+  }
+
+  .discover-mini-button {
+    padding: 8px 11px;
+    font-size: 10px;
+  }
+}
+</style>
 </head>
+
 <body>
+
 <div id="libraryError" role="alert" hidden></div>
+
+<!-- =====================================
+     HEADER
+===================================== -->
+
 <header class="site-header">
-  <a class="brand" href="./"><span class="brand-mark">◆</span> PageForge</a>
+
+  <a class="brand" href="./">
+    <span class="brand-mark">◆</span>
+    PageForge
+  </a>
+
   <div class="header-actions" id="account">
+
     <div class="add-menu-wrap" id="addMenuWrap" hidden>
-      <button id="addMenuButton" class="add-menu-button" type="button" aria-label="Open create menu" aria-expanded="false">＋</button>
+
+      <button
+        id="addMenuButton"
+        class="add-menu-button"
+        type="button"
+        aria-label="Open create menu"
+        aria-expanded="false"
+      >＋</button>
+
       <div id="addMenu" class="add-menu" hidden>
-        <a href="./opensrc.html"><span class="menu-icon opensrc-icon">🔗</span><span><b>Opensource</b><small>Explore open-source tools</small></span><span class="menu-arrow">↗</span></a>
-        <button id="menuWebsiteBuilder" type="button"><span class="menu-icon website-menu-icon">⌘</span><span><b>Website Builder</b><small>Create and publish a website</small></span><span class="menu-arrow">→</span></button>
-        <a href="./restaurant-builder.html"><span class="menu-icon restaurant-menu-icon">♨</span><span><b>Restaurant Studio</b><small>Build a digital QR menu</small></span><span class="menu-arrow">↗</span></a>
-        <a href="./contact-studio.html"><span class="menu-icon">✉</span><span><b>Contact Forms</b><small>Create forms and collect responses</small></span><span class="menu-arrow">↗</span></a>
+
+        <a href="./opensrc.html">
+          <span class="menu-icon opensrc-icon">🔗</span>
+          <span>
+            <b>Opensource</b>
+            <small>Explore open-source tools</small>
+          </span>
+          <span class="menu-arrow">↗</span>
+        </a>
+
+        <button id="menuWebsiteBuilder" type="button">
+          <span class="menu-icon website-menu-icon">⌘</span>
+          <span>
+            <b>Website Builder</b>
+            <small>Create and publish a website</small>
+          </span>
+          <span class="menu-arrow">→</span>
+        </button>
+
+        <a href="./restaurant-builder.html">
+          <span class="menu-icon restaurant-menu-icon">♨</span>
+          <span>
+            <b>Restaurant Studio</b>
+            <small>Build a digital QR menu</small>
+          </span>
+          <span class="menu-arrow">↗</span>
+        </a>
+
+        <a href="./contact-studio.html">
+          <span class="menu-icon">✉</span>
+          <span>
+            <b>Contact Forms</b>
+            <small>Create forms and collect responses</small>
+          </span>
+          <span class="menu-arrow">↗</span>
+        </a>
+
       </div>
     </div>
-    <button id="logout" class="button button-light button-small" type="button" hidden>Log out</button>
+
+    <button
+      id="logout"
+      class="button button-light button-small"
+      type="button"
+      hidden
+    >Log out</button>
+
   </div>
 </header>
+
+<!-- =====================================
+     MAIN BUILDER
+===================================== -->
+
 <main id="builder">
-<section class="intro"><p class="eyebrow">✦ PAGEFORGE STUDIO</p><h1>Build something <span>remarkable.</span></h1><p class="intro-copy">One simple workspace for your websites, digital menus and business ideas.</p></section>
-<section id="auth" class="auth-shell">
- <div class="auth-aside"><span class="aside-chip">● YOUR CREATIVE WORKSPACE</span><div class="aside-art"><div class="art-window"><div class="art-bar">●　●　●　 your-next-project.site</div><div class="art-content"><i></i><b></b><b></b><small></small><small></small><em></em></div></div><span class="float-one">✦ Design</span><span class="float-two">↗ Publish</span></div><div class="aside-bottom"><h2>Your ideas deserve<br>to go live.</h2><p>Design, build and publish without the complicated setup.</p><ul><li>Website builder</li><li>Restaurant QR menus</li><li>One account, all projects</li></ul></div></div>
- <div class="auth-main"><div class="auth-heading"><p class="mini-kicker">WELCOME TO PAGEFORGE</p><h2 id="authTitle">Welcome back.</h2><p id="authSubtitle">Sign in to continue to your workspace.</p></div>
- <div class="auth-switch" role="tablist"><button type="button" id="showSignin" class="auth-tab active" role="tab" aria-selected="true">Sign in</button><button type="button" id="showSignup" class="auth-tab" role="tab" aria-selected="false">Create account</button></div>
- <div class="fields auth-fields"><label for="email">Email address<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label><label for="password">Password<span class="password-wrap"><input id="password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters"><button type="button" id="togglePassword" class="password-toggle">Show</button></span></label></div>
- <div class="auth-actions"><button id="signin" class="button button-primary auth-submit" type="button">Sign in <span>→</span></button><button id="signup" class="button button-primary auth-submit" type="button" hidden>Create account <span>→</span></button></div>
- <p id="authStatus" class="auth-status" role="status" aria-live="polite"></p><button id="resendConfirmation" type="button" class="resend-button" hidden>↻ Resend confirmation email</button>
- <p class="auth-footnote">If email confirmation is enabled, check your inbox after creating an account. Open the newest confirmation link to activate your account.</p><div class="auth-trust">⌁ Secure account access <span>·</span> Made for creators</div></div>
-</section>
-<section id="studioDashboard" class="pf-dashboard" hidden>
- <div class="section-heading"><div><p class="eyebrow">YOUR WORKSPACE</p><h2>My Studio</h2><p>Your creative workspace, all in one place.</p></div><span class="workspace-pill">● Workspace ready</span></div>
- <section class="discover-section" aria-labelledby="discoverTitle">
-  <div class="discover-heading"><div><p class="eyebrow">WHAT'S NEW</p><h2 id="discoverTitle">Discover</h2><p>Updates, ideas and announcements from PageForge.</p></div><span class="discover-live"><i></i> LATEST UPDATES</span></div>
-  <div id="discoverFeed" class="discover-feed" aria-live="polite"><article class="discover-empty">Loading Discover feed…</article></div>
- </section>
-</section>
-<!-- PAGEFORGE DISCOVER CARD -->
-<style>
-  .discover-mini {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-    max-width: 680px;
-    margin: 24px 0;
-    padding: 14px;
-    box-sizing: border-box;
-    background: linear-gradient(120deg, #fff, #f5f1ff);
-    border: 1px solid #e8e2f8;
-    border-radius: 18px;
-    box-shadow: 0 8px 28px rgba(75,55,130,.07);
-    transition: .25s ease;
-  }
 
-  .discover-mini:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 13px 32px rgba(75,55,130,.12);
-  }
-
-  .discover-mini-image {
-    width: 105px;
-    height: 105px;
-    flex: 0 0 105px;
-    overflow: hidden;
-    border-radius: 13px;
-    background: #eeeaf8;
-  }
-
-  .discover-mini-image img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-  }
-
-  .discover-mini-content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .discover-label {
-    color: #8060d8;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-  }
-
-  .discover-mini-content h3 {
-    margin: 5px 0;
-    color: #242238;
-    font-size: 21px;
-    font-weight: 800;
-  }
-
-  .discover-mini-content p {
-    margin: 0 0 11px;
-    color: #777487;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-
-  .discover-mini-button {
-    display: inline-flex;
-    align-items: center;
-    padding: 9px 14px;
-    border-radius: 9px;
-    background: linear-gradient(135deg,#8565e9,#6847ca);
-    color: #fff !important;
-    text-decoration: none !important;
-    font-size: 11px;
-    font-weight: 750;
-    transition: .2s ease;
-  }
-
-  .discover-mini-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 14px rgba(105,72,202,.25);
-  }
-
-  @media(max-width:500px) {
-    .discover-mini {
-      gap: 11px;
-      padding: 11px;
-      border-radius: 15px;
-    }
-
-    .discover-mini-image {
-      width: 85px;
-      height: 95px;
-      flex-basis: 85px;
-    }
-
-    .discover-mini-content h3 {
-      font-size: 18px;
-    }
-
-    .discover-mini-content p {
-      font-size: 11px;
-    }
-
-    .discover-mini-button {
-      padding: 8px 11px;
-      font-size: 10px;
-    }
-  }
-</style>
-
-<section class="discover-mini">
-  <div class="discover-mini-image">
-    <img
-      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqiMddMZ0g7ch9Ct_QDxZMxhkfnveIw7fPdD264gxa3Q&s=10"
-      alt="Discover"
-      loading="lazy"
-    >
-  </div>
-
-  <div class="discover-mini-content">
-    <span class="discover-label">EXPLORE & LEARN</span>
-    <h3>Discover</h3>
-
-    <p>
-      Explore creative ideas, useful resources and updates.
-      Learn how to host websites and publish your web pages online.
+  <section class="intro">
+    <p class="eyebrow">✦ PAGEFORGE STUDIO</p>
+    <h1>Build something <span>remarkable.</span></h1>
+    <p class="intro-copy">
+      One simple workspace for your websites,
+      digital menus and business ideas.
     </p>
+  </section>
 
-    <a href="./discover.html" class="discover-mini-button">
-      Explore Discover ↗
-    </a>
-  </div>
-</section>
+  <!-- ===================================
+       AUTHENTICATION
+  ==================================== -->
 
-<div id="editor" class="layout" hidden>
-<section class="panel editor-panel"><div class="pf-editor-toolbar"><div><p class="eyebrow">WEBSITE BUILDER</p><h2>Customize your page</h2></div><button id="backToDashboard" class="button button-light" type="button">← Dashboard</button></div>
-<div class="fields"><label>Page title<input id="title" type="text" maxlength="100" value="Welcome to my page"></label><label>Subtitle<input id="subtitle" type="text" maxlength="160" value="Everything you need, in one place"></label><label>Description<textarea id="description" maxlength="3000" rows="5">A beautiful page made with PageForge.</textarea></label><label>Button text<input id="buttonText" type="text" maxlength="50" value="Contact us"></label><label>Button URL<input id="buttonUrl" type="url" placeholder="https://example.com"></label><label>Cover image <small>JPG, PNG, WEBP · max 5 MB</small><input id="image" type="file" accept="image/jpeg,image/png,image/webp"></label><div class="colors"><label>Background<input id="background" type="color" value="#0b1020"></label><label>Accent<input id="accent" type="color" value="#8b5cf6"></label><label>Text<input id="textColor" type="color" value="#ffffff"></label></div></div>
-<div class="actions"><button id="publish" class="button button-primary" type="button">Publish page →</button><button id="reset" class="button button-light" type="button">New page</button></div><p id="status" class="status-line" role="status" aria-live="polite"></p></section>
-<section class="editor-side"><div class="panel previewWrap"><div class="panel-heading"><div><p class="eyebrow">IN REAL TIME</p><h2>Live preview</h2></div><span class="preview-dot">● LIVE</span></div><div id="preview"></div></div>
-<div id="result" class="panel" hidden><h2>Your page is live!</h2><p class="muted">Copy the URL or share the QR code.</p><input id="shareUrl" type="text" readonly aria-label="Published page URL"><div class="actions"><button id="copy" class="button button-primary" type="button">Copy URL</button><a id="openPage" target="_blank" rel="noopener noreferrer" class="button button-light">Open page</a></div><canvas id="qr" width="220" height="220"></canvas><a id="downloadQR" class="button button-light download-qr" download="pageforge-qr.png">Download QR</a></div>
-<div class="panel"><div class="panel-heading"><h2>My pages</h2></div><div id="myPages" class="pages"></div></div></section></div></main>
-<main id="publicPage" hidden><div id="publishedContent">Loading webpage...</div><p class="footer"><a href="./">Create your own page with PageForge</a></p></main>
-  
-<!-- PAGEFORGE DISCOVER CARD -->
-<style>
-  .discover-mini {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-    max-width: 680px;
-    margin: 24px 0;
-    padding: 14px;
-    box-sizing: border-box;
-    background: linear-gradient(120deg, #fff, #f5f1ff);
-    border: 1px solid #e8e2f8;
-    border-radius: 18px;
-    box-shadow: 0 8px 28px rgba(75,55,130,.07);
-    transition: .25s ease;
-  }
+  <section id="auth" class="auth-shell">
 
-  .discover-mini:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 13px 32px rgba(75,55,130,.12);
-  }
+    <div class="auth-aside">
 
-  .discover-mini-image {
-    width: 105px;
-    height: 105px;
-    flex: 0 0 105px;
-    overflow: hidden;
-    border-radius: 13px;
-    background: #eeeaf8;
-  }
+      <span class="aside-chip">
+        ● YOUR CREATIVE WORKSPACE
+      </span>
 
-  .discover-mini-image img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-  }
+      <div class="aside-art">
 
-  .discover-mini-content {
-    flex: 1;
-    min-width: 0;
-  }
+        <div class="art-window">
 
-  .discover-label {
-    color: #8060d8;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-  }
+          <div class="art-bar">
+            ●　●　●　 your-next-project.site
+          </div>
 
-  .discover-mini-content h3 {
-    margin: 5px 0;
-    color: #242238;
-    font-size: 21px;
-    font-weight: 800;
-  }
+          <div class="art-content">
+            <i></i>
+            <b></b>
+            <b></b>
+            <small></small>
+            <small></small>
+            <em></em>
+          </div>
 
-  .discover-mini-content p {
-    margin: 0 0 11px;
-    color: #777487;
-    font-size: 12px;
-    line-height: 1.5;
-  }
+        </div>
 
-  .discover-mini-button {
-    display: inline-flex;
-    align-items: center;
-    padding: 9px 14px;
-    border-radius: 9px;
-    background: linear-gradient(135deg,#8565e9,#6847ca);
-    color: #fff !important;
-    text-decoration: none !important;
-    font-size: 11px;
-    font-weight: 750;
-    transition: .2s ease;
-  }
+        <span class="float-one">✦ Design</span>
+        <span class="float-two">↗ Publish</span>
 
-  .discover-mini-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 14px rgba(105,72,202,.25);
-  }
+      </div>
 
-  @media(max-width:500px) {
-    .discover-mini {
-      gap: 11px;
-      padding: 11px;
-      border-radius: 15px;
-    }
+      <div class="aside-bottom">
 
-    .discover-mini-image {
-      width: 85px;
-      height: 95px;
-      flex-basis: 85px;
-    }
+        <h2>Your ideas deserve<br>to go live.</h2>
 
-    .discover-mini-content h3 {
-      font-size: 18px;
-    }
+        <p>
+          Design, build and publish without
+          the complicated setup.
+        </p>
 
-    .discover-mini-content p {
-      font-size: 11px;
-    }
+        <ul>
+          <li>Website builder</li>
+          <li>Restaurant QR menus</li>
+          <li>One account, all projects</li>
+        </ul>
 
-    .discover-mini-button {
-      padding: 8px 11px;
-      font-size: 10px;
-    }
-  }
-</style>
+      </div>
+    </div>
 
-<section class="discover-mini">
-  <div class="discover-mini-image">
-    <img
-      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqiMddMZ0g7ch9Ct_QDxZMxhkfnveIw7fPdD264gxa3Q&s=10"
-      alt="Discover"
-      loading="lazy"
+    <div class="auth-main">
+
+      <div class="auth-heading">
+        <p class="mini-kicker">WELCOME TO PAGEFORGE</p>
+        <h2 id="authTitle">Welcome back.</h2>
+        <p id="authSubtitle">
+          Sign in to continue to your workspace.
+        </p>
+      </div>
+
+      <!-- Sign in / Sign up tabs -->
+
+      <div class="auth-switch" role="tablist">
+
+        <button
+          type="button"
+          id="showSignin"
+          class="auth-tab active"
+          role="tab"
+          aria-selected="true"
+        >Sign in</button>
+
+        <button
+          type="button"
+          id="showSignup"
+          class="auth-tab"
+          role="tab"
+          aria-selected="false"
+        >Create account</button>
+
+      </div>
+
+      <!-- Email and password -->
+
+      <div class="fields auth-fields">
+
+        <label for="email">
+          Email address
+
+          <input
+            id="email"
+            type="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+          >
+        </label>
+
+        <label for="password">
+          Password
+
+          <span class="password-wrap">
+
+            <input
+              id="password"
+              type="password"
+              autocomplete="current-password"
+              minlength="6"
+              placeholder="At least 6 characters"
+            >
+
+            <button
+              type="button"
+              id="togglePassword"
+              class="password-toggle"
+            >Show</button>
+
+          </span>
+        </label>
+
+      </div>
+
+      <!-- Email authentication buttons -->
+
+      <div class="auth-actions">
+
+        <button
+          id="signin"
+          class="button button-primary auth-submit"
+          type="button"
+        >
+          Sign in <span>→</span>
+        </button>
+
+        <button
+          id="signup"
+          class="button button-primary auth-submit"
+          type="button"
+          hidden
+        >
+          Create account <span>→</span>
+        </button>
+
+      </div>
+
+      <!-- =================================
+           SOCIAL LOGIN
+      ================================== -->
+
+      <div class="social-login">
+
+        <div class="social-divider">
+          <span>OR CONTINUE WITH</span>
+        </div>
+
+        <button
+          id="googleLogin"
+          class="social-btn"
+          type="button"
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt=""
+          >
+          <span>Continue with Google</span>
+        </button>
+
+        <button
+          id="githubLogin"
+          class="social-btn"
+          type="button"
+        >
+          <img
+            src="https://github.githubassets.com/favicons/favicon.svg"
+            alt=""
+          >
+          <span>Continue with GitHub</span>
+        </button>
+
+      </div>
+
+      <!-- Authentication messages -->
+
+      <p
+        id="authStatus"
+        class="auth-status"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <button
+        id="resendConfirmation"
+        type="button"
+        class="resend-button"
+        hidden
+      >
+        ↻ Resend confirmation email
+      </button>
+
+      <p class="auth-footnote">
+        If email confirmation is enabled, check your
+        inbox after creating an account. Open the newest
+        confirmation link to activate your account.
+      </p>
+
+      <div class="auth-trust">
+        ⌁ Secure account access
+        <span>·</span>
+        Made for creators
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================
+       WORKSPACE DASHBOARD
+  ==================================== -->
+
+  <section id="studioDashboard" class="pf-dashboard" hidden>
+
+    <div class="section-heading">
+
+      <div>
+        <p class="eyebrow">YOUR WORKSPACE</p>
+        <h2>My Studio</h2>
+        <p>Your creative workspace, all in one place.</p>
+      </div>
+
+      <span class="workspace-pill">
+        ● Workspace ready
+      </span>
+
+    </div>
+
+    <section
+      class="discover-section"
+      aria-labelledby="discoverTitle"
     >
+
+      <div class="discover-heading">
+
+        <div>
+          <p class="eyebrow">WHAT'S NEW</p>
+          <h2 id="discoverTitle">Discover</h2>
+          <p>
+            Updates, ideas and announcements from PageForge.
+          </p>
+        </div>
+
+        <span class="discover-live">
+          <i></i> LATEST UPDATES
+        </span>
+
+      </div>
+
+      <div
+        id="discoverFeed"
+        class="discover-feed"
+        aria-live="polite"
+      >
+        <article class="discover-empty">
+          Loading Discover feed…
+        </article>
+      </div>
+
+    </section>
+
+  </section>
+
+  <!-- ===================================
+       DISCOVER MINI CARD
+  ==================================== -->
+
+  <section class="discover-mini">
+
+    <div class="discover-mini-image">
+      <img
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqiMddMZ0g7ch9Ct_QDxZMxhkfnveIw7fPdD264gxa3Q&s=10"
+        alt="Discover"
+        loading="lazy"
+      >
+    </div>
+
+    <div class="discover-mini-content">
+
+      <span class="discover-label">
+        EXPLORE & LEARN
+      </span>
+
+      <h3>Discover</h3>
+
+      <p>
+        Explore creative ideas, useful resources and updates.
+        Learn how to host websites and publish your web pages online.
+      </p>
+
+      <a
+        href="./discover.html"
+        class="discover-mini-button"
+      >
+        Explore Discover ↗
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ===================================
+       WEBSITE EDITOR
+  ==================================== -->
+
+  <div id="editor" class="layout" hidden>
+
+    <section class="panel editor-panel">
+
+      <div class="pf-editor-toolbar">
+
+        <div>
+          <p class="eyebrow">WEBSITE BUILDER</p>
+          <h2>Customize your page</h2>
+        </div>
+
+        <button
+          id="backToDashboard"
+          class="button button-light"
+          type="button"
+        >
+          ← Dashboard
+        </button>
+
+      </div>
+
+      <div class="fields">
+
+        <label>
+          Page title
+          <input
+            id="title"
+            type="text"
+            maxlength="100"
+            value="Welcome to my page"
+          >
+        </label>
+
+        <label>
+          Subtitle
+          <input
+            id="subtitle"
+            type="text"
+            maxlength="160"
+            value="Everything you need, in one place"
+          >
+        </label>
+
+        <label>
+          Description
+          <textarea
+            id="description"
+            maxlength="3000"
+            rows="5"
+          >A beautiful page made with PageForge.</textarea>
+        </label>
+
+        <label>
+          Button text
+          <input
+            id="buttonText"
+            type="text"
+            maxlength="50"
+            value="Contact us"
+          >
+        </label>
+
+        <label>
+          Button URL
+          <input
+            id="buttonUrl"
+            type="url"
+            placeholder="https://example.com"
+          >
+        </label>
+
+        <label>
+          Cover image
+          <small>JPG, PNG, WEBP · max 5 MB</small>
+          <input
+            id="image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+          >
+        </label>
+
+        <div class="colors">
+
+          <label>
+            Background
+            <input
+              id="background"
+              type="color"
+              value="#0b1020"
+            >
+          </label>
+
+          <label>
+            Accent
+            <input
+              id="accent"
+              type="color"
+              value="#8b5cf6"
+            >
+          </label>
+
+          <label>
+            Text
+            <input
+              id="textColor"
+              type="color"
+              value="#ffffff"
+            >
+          </label>
+
+        </div>
+      </div>
+
+      <div class="actions">
+
+        <button
+          id="publish"
+          class="button button-primary"
+          type="button"
+        >
+          Publish page →
+        </button>
+
+        <button
+          id="reset"
+          class="button button-light"
+          type="button"
+        >
+          New page
+        </button>
+
+      </div>
+
+      <p
+        id="status"
+        class="status-line"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+    </section>
+
+    <!-- Editor preview -->
+
+    <section class="editor-side">
+
+      <div class="panel previewWrap">
+
+        <div class="panel-heading">
+
+          <div>
+            <p class="eyebrow">IN REAL TIME</p>
+            <h2>Live preview</h2>
+          </div>
+
+          <span class="preview-dot">● LIVE</span>
+
+        </div>
+
+        <div id="preview"></div>
+
+      </div>
+
+      <!-- Published result -->
+
+      <div id="result" class="panel" hidden>
+
+        <h2>Your page is live!</h2>
+
+        <p class="muted">
+          Copy the URL or share the QR code.
+        </p>
+
+        <input
+          id="shareUrl"
+          type="text"
+          readonly
+          aria-label="Published page URL"
+        >
+
+        <div class="actions">
+
+          <button
+            id="copy"
+            class="button button-primary"
+            type="button"
+          >
+            Copy URL
+          </button>
+
+          <a
+            id="openPage"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="button button-light"
+          >
+            Open page
+          </a>
+
+        </div>
+
+        <canvas id="qr" width="220" height="220"></canvas>
+
+        <a
+          id="downloadQR"
+          class="button button-light download-qr"
+          download="pageforge-qr.png"
+        >
+          Download QR
+        </a>
+
+      </div>
+
+      <!-- Saved pages -->
+
+      <div class="panel">
+
+        <div class="panel-heading">
+          <h2>My pages</h2>
+        </div>
+
+        <div id="myPages" class="pages"></div>
+
+      </div>
+
+    </section>
   </div>
 
-  <div class="discover-mini-content">
-    <span class="discover-label">EXPLORE & LEARN</span>
-    <h3>Discover</h3>
+</main>
 
-    <p>
-      Explore creative ideas, useful resources and updates.
-      Learn how to host websites and publish your web pages online.
-    </p>
+<!-- =====================================
+     PUBLIC PAGE
+===================================== -->
 
-    <a href="./discover.html" class="discover-mini-button">
-      Explore Discover ↗
+<main id="publicPage" hidden>
+
+  <div id="publishedContent">
+    Loading webpage...
+  </div>
+
+  <p class="footer">
+    <a href="./">
+      Create your own page with PageForge
     </a>
-  </div>
-</section>
+  </p>
+
+</main>
+
+<!-- =====================================
+     DISCOVER MINI CARD CSS
+===================================== -->
+
+<!-- =====================================
+     INLINE UI BEHAVIOUR
+===================================== -->
 
 <script>
-document.addEventListener('DOMContentLoaded',function(){
- const $=id=>document.getElementById(id),pass=$('password'),resend=$('resendConfirmation');
- function mode(signup){$('signin').hidden=signup;$('signup').hidden=!signup;$('showSignin').classList.toggle('active',!signup);$('showSignup').classList.toggle('active',signup);$('showSignin').setAttribute('aria-selected',String(!signup));$('showSignup').setAttribute('aria-selected',String(signup));$('authTitle').textContent=signup?'Create your account.':'Welcome back.';$('authSubtitle').textContent=signup?'Start building your next idea today.':'Sign in to continue to your workspace.';pass.autocomplete=signup?'new-password':'current-password';$('authStatus').textContent='';resend.hidden=true;}
- $('showSignin').addEventListener('click',()=>mode(false));$('showSignup').addEventListener('click',()=>mode(true));
- $('togglePassword').addEventListener('click',function(){const show=pass.type==='password';pass.type=show?'text':'password';this.textContent=show?'Hide':'Show';this.setAttribute('aria-label',show?'Hide password':'Show password');});mode(false);
+
+// -------------------------------------
+// AUTH TAB SWITCHING
+// -------------------------------------
+
+document.addEventListener('DOMContentLoaded', function() {
+
+  const $ = id => document.getElementById(id);
+
+  const pass = $('password');
+  const resend = $('resendConfirmation');
+
+  function mode(signup) {
+
+    $('signin').hidden = signup;
+    $('signup').hidden = !signup;
+
+    $('showSignin').classList.toggle(
+      'active',
+      !signup
+    );
+
+    $('showSignup').classList.toggle(
+      'active',
+      signup
+    );
+
+    $('showSignin').setAttribute(
+      'aria-selected',
+      String(!signup)
+    );
+
+    $('showSignup').setAttribute(
+      'aria-selected',
+      String(signup)
+    );
+
+    $('authTitle').textContent =
+      signup
+        ? 'Create your account.'
+        : 'Welcome back.';
+
+    $('authSubtitle').textContent =
+      signup
+        ? 'Start building your next idea today.'
+        : 'Sign in to continue to your workspace.';
+
+    pass.autocomplete =
+      signup
+        ? 'new-password'
+        : 'current-password';
+
+    $('authStatus').textContent = '';
+    resend.hidden = true;
+  }
+
+  $('showSignin').addEventListener(
+    'click',
+    () => mode(false)
+  );
+
+  $('showSignup').addEventListener(
+    'click',
+    () => mode(true)
+  );
+
+  $('togglePassword').addEventListener(
+    'click',
+    function() {
+
+      const show = pass.type === 'password';
+
+      pass.type = show ? 'text' : 'password';
+
+      this.textContent = show ? 'Hide' : 'Show';
+
+      this.setAttribute(
+        'aria-label',
+        show ? 'Hide password' : 'Show password'
+      );
+
+    }
+  );
+
+  mode(false);
+
 });
-window.addEventListener('DOMContentLoaded',function(){
- const $=id=>document.getElementById(id),dash=$('studioDashboard'),editor=$('editor'),logout=$('logout'),addWrap=$('addMenuWrap'),addButton=$('addMenuButton'),menu=$('addMenu');
- if(new URLSearchParams(location.search).has('page'))return;let view='dashboard';
- function update(){const loggedIn=!logout.hidden;addWrap.hidden=!loggedIn;if(!loggedIn){dash.hidden=true;editor.hidden=true;menu.hidden=true;addButton.setAttribute('aria-expanded','false');return;}dash.hidden=view!=='dashboard';editor.hidden=view!=='editor';}
- function closeMenu(){menu.hidden=true;addButton.setAttribute('aria-expanded','false');}
- addButton.addEventListener('click',function(){menu.hidden=!menu.hidden;addButton.setAttribute('aria-expanded',String(!menu.hidden));});
- $('menuWebsiteBuilder').addEventListener('click',function(){view='editor';closeMenu();update();scrollTo({top:0,behavior:'smooth'});});
- $('backToDashboard').addEventListener('click',function(){view='dashboard';update();scrollTo({top:0,behavior:'smooth'});});
- document.addEventListener('click',function(event){if(!addWrap.contains(event.target))closeMenu();});
- document.addEventListener('keydown',function(event){if(event.key==='Escape')closeMenu();});
- new MutationObserver(update).observe(logout,{attributes:true,attributeFilter:['hidden']});update();
+
+// -------------------------------------
+// DASHBOARD NAVIGATION
+// -------------------------------------
+
+window.addEventListener('DOMContentLoaded', function() {
+
+  const $ = id => document.getElementById(id);
+
+  const dash = $('studioDashboard');
+  const editor = $('editor');
+  const logout = $('logout');
+
+  const addWrap = $('addMenuWrap');
+  const addButton = $('addMenuButton');
+  const menu = $('addMenu');
+
+  if (new URLSearchParams(location.search).has('page')) {
+    return;
+  }
+
+  let view = 'dashboard';
+
+  function update() {
+
+    const loggedIn = !logout.hidden;
+
+    addWrap.hidden = !loggedIn;
+
+    if (!loggedIn) {
+
+      dash.hidden = true;
+      editor.hidden = true;
+      menu.hidden = true;
+
+      addButton.setAttribute(
+        'aria-expanded',
+        'false'
+      );
+
+      return;
+    }
+
+    dash.hidden = view !== 'dashboard';
+    editor.hidden = view !== 'editor';
+
+  }
+
+  function closeMenu() {
+
+    menu.hidden = true;
+
+    addButton.setAttribute(
+      'aria-expanded',
+      'false'
+    );
+
+  }
+
+  addButton.addEventListener(
+    'click',
+    function() {
+
+      menu.hidden = !menu.hidden;
+
+      addButton.setAttribute(
+        'aria-expanded',
+        String(!menu.hidden)
+      );
+
+    }
+  );
+
+  $('menuWebsiteBuilder').addEventListener(
+    'click',
+    function() {
+
+      view = 'editor';
+
+      closeMenu();
+      update();
+
+      scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+
+    }
+  );
+
+  $('backToDashboard').addEventListener(
+    'click',
+    function() {
+
+      view = 'dashboard';
+
+      update();
+
+      scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+
+    }
+  );
+
+  document.addEventListener(
+    'click',
+    function(event) {
+
+      if (!addWrap.contains(event.target)) {
+        closeMenu();
+      }
+
+    }
+  );
+
+  document.addEventListener(
+    'keydown',
+    function(event) {
+
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+
+    }
+  );
+
+  new MutationObserver(update).observe(
+    logout,
+    {
+      attributes: true,
+      attributeFilter: ['hidden']
+    }
+  );
+
+  update();
+
 });
-async function loadDiscoverFeed(){
- const target=document.getElementById('discoverFeed');if(!target)return;
- try{
-  const response=await fetch('./discover.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('Feed file not found');
-  const posts=await response.json();if(!Array.isArray(posts))throw new Error('Feed format is invalid');
-  target.replaceChildren();
-  if(!posts.length){target.innerHTML='<article class="discover-empty">No updates yet. Check back soon.</article>';return;}
-  posts.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(post=>{
-   const card=document.createElement('article');card.className='discover-card';
-   const meta=document.createElement('div');meta.className='discover-meta';
-   const tag=document.createElement('span');tag.className='discover-tag';tag.textContent=String(post.tag||'UPDATE');
-   const date=document.createElement('time');date.textContent=String(post.date||'');if(post.date)date.dateTime=post.date;
-   meta.append(tag,date);
-   const title=document.createElement('h3');title.textContent=String(post.title||'Untitled update');
-   const desc=document.createElement('p');desc.textContent=String(post.description||'');
-   card.append(meta,title,desc);
-   if(post.link&&/^https?:\/\//i.test(post.link)||post.link&&post.link.startsWith('./')){const link=document.createElement('a');link.className='discover-link';link.href=post.link;link.textContent=String(post.linkText||'Explore more');if(/^https?:\/\//i.test(post.link)){link.target='_blank';link.rel='noopener noreferrer';}card.append(link);}
-   target.append(card);
-  });
- }catch(error){target.innerHTML='<article class="discover-empty">Discover feed is temporarily unavailable. Please check back later.</article>';console.warn('Discover feed:',error);}
+
+// -------------------------------------
+// DISCOVER FEED
+// -------------------------------------
+
+async function loadDiscoverFeed() {
+
+  const target = document.getElementById('discoverFeed');
+
+  if (!target) return;
+
+  try {
+
+    const response = await fetch(
+      './discover.json?v=' + Date.now(),
+      {
+        cache: 'no-store'
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Feed file not found');
+    }
+
+    const posts = await response.json();
+
+    if (!Array.isArray(posts)) {
+      throw new Error('Feed format is invalid');
+    }
+
+    target.replaceChildren();
+
+    if (!posts.length) {
+
+      const empty = document.createElement('article');
+
+      empty.className = 'discover-empty';
+
+      empty.textContent =
+        'No updates yet. Check back soon.';
+
+      target.append(empty);
+
+      return;
+    }
+
+    posts.slice().sort(
+      (a, b) =>
+        (b.date || '').localeCompare(a.date || '')
+    ).forEach(post => {
+
+      const card = document.createElement('article');
+
+      card.className = 'discover-card';
+
+      const meta = document.createElement('div');
+
+      meta.className = 'discover-meta';
+
+      const tag = document.createElement('span');
+
+      tag.className = 'discover-tag';
+
+      tag.textContent = String(
+        post.tag || 'UPDATE'
+      );
+
+      const date = document.createElement('time');
+
+      date.textContent = String(post.date || '');
+
+      if (post.date) {
+        date.dateTime = post.date;
+      }
+
+      meta.append(tag, date);
+
+      const title = document.createElement('h3');
+
+      title.textContent = String(
+        post.title || 'Untitled update'
+      );
+
+      const desc = document.createElement('p');
+
+      desc.textContent = String(
+        post.description || ''
+      );
+
+      card.append(meta, title, desc);
+
+      const validLink =
+        post.link &&
+        (
+          /^https?:\/\//i.test(post.link) ||
+          post.link.startsWith('./')
+        );
+
+      if (validLink) {
+
+        const link = document.createElement('a');
+
+        link.className = 'discover-link';
+
+        link.href = post.link;
+
+        link.textContent = String(
+          post.linkText || 'Explore more'
+        );
+
+        if (/^https?:\/\//i.test(post.link)) {
+
+          link.target = '_blank';
+
+          link.rel = 'noopener noreferrer';
+
+        }
+
+        card.append(link);
+
+      }
+
+      target.append(card);
+
+    });
+
+  } catch (error) {
+
+    const empty = document.createElement('article');
+
+    empty.className = 'discover-empty';
+
+    empty.textContent =
+      'Discover feed is temporarily unavailable. Please check back later.';
+
+    target.replaceChildren(empty);
+
+    console.warn('Discover feed:', error);
+
+  }
+
 }
-window.addEventListener('DOMContentLoaded',loadDiscoverFeed);
-window.addEventListener('load',function(){const e=document.getElementById('libraryError');if(!window.supabase||typeof window.supabase.createClient!=='function'){e.hidden=false;e.textContent='Supabase library failed to load. Check your internet connection.';}if(!window.QRCode)console.warn('QR library failed to load.');});
-</script></body></html>
+
+window.addEventListener(
+  'DOMContentLoaded',
+  loadDiscoverFeed
+);
+
+// -------------------------------------
+// LIBRARY CHECK
+// -------------------------------------
+
+window.addEventListener('load', function() {
+
+  const errorBox = document.getElementById('libraryError');
+
+  if (
+    !window.supabase ||
+    typeof window.supabase.createClient !== 'function'
+  ) {
+
+    errorBox.hidden = false;
+
+    errorBox.textContent =
+      'Supabase library failed to load. Check your internet connection.';
+
+  }
+
+  if (!window.QRCode) {
+    console.warn('QR library failed to load.');
+  }
+
+});
+
+</script>
+
+</body>
+</html>
